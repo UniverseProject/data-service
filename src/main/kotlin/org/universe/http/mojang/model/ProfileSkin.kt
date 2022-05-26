@@ -19,7 +19,12 @@ private const val PROPERTY_TEXTURES = "textures"
  * @property signature Signature of the base64-encoded texture information.
  */
 @Serializable
-data class ProfileSkin(val id: String, val name: String, val properties: List<Property> = emptyList(), val legacy: Boolean = false) {
+data class ProfileSkin(
+    val id: String,
+    val name: String,
+    val properties: List<Property> = emptyList(),
+    val legacy: Boolean = false
+) {
 
     @Serializable
     data class Property(val name: String, val value: String, val signature: String? = null)
