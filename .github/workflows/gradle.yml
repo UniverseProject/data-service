@@ -25,9 +25,6 @@ jobs:
         java-version: 17
         distribution: adopt
 
-    - name: Set permission to execute gradle
-      run: chmod +x gradlew
-
     - name: Build project
       uses: gradle/gradle-build-action@v2.1.6
       with:
