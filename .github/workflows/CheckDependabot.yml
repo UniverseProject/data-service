@@ -12,24 +12,10 @@ jobs:
     - name: Checkout project
       uses: actions/checkout@v3
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
+    - name: Initialization
+      uses: ./.github/actions/init
       with:
-        java-version: 17
-        distribution: adopt
-
-    - name: Cache gradle
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-
-    - name: Set permission to execute gradle
-      run: chmod +x gradlew
+        jdk: 17
 
     - name: Build
       uses: gradle/gradle-build-action@v2.1.6
