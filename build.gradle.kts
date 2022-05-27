@@ -2,6 +2,8 @@ plugins {
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    // Allows to retrieve code coverage
+    jacoco
 }
 
 val projectVersion: String by project
@@ -74,8 +76,16 @@ dependencies {
 }
 
 tasks {
+    jacocoTestReport {
+        dependsOn(test) // tests are required to run before generating the report
+        reports {
+            xml.required.set(true)
+        }
+    }
+
     test {
         useJUnitPlatform()
+        finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
 
     compileKotlin {
