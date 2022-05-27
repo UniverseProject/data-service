@@ -1,4 +1,4 @@
-package org.universe.http.mojang.model
+package org.universe.model
 
 import kotlinx.serialization.Serializable
 

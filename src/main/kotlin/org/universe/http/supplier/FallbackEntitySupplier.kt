@@ -1,7 +1,7 @@
 package org.universe.http.supplier
 
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * Creates supplier providing a strategy which will first operate on this supplier. When an entity

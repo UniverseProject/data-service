@@ -7,9 +7,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.universe.http.supplier.EntitySupplier
-import org.universe.http.utils.createProfileId
-import org.universe.http.utils.createProfileSkin
-import org.universe.http.utils.getRandomString
+import org.universe.utils.createProfileId
+import org.universe.utils.createProfileSkin
+import org.universe.utils.getRandomString
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

@@ -1,4 +1,4 @@
-package org.universe.http.mojang.model
+package org.universe.model
 
 import io.ktor.util.*
 import kotlinx.serialization.encodeToString
@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
-import org.universe.http.utils.getRandomString
+import org.universe.utils.getRandomString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

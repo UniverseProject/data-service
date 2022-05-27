@@ -17,10 +17,10 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.universe.http.mojang.MojangAPI
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
-import org.universe.http.utils.createProfileId
-import org.universe.http.utils.getRandomString
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
+import org.universe.utils.createProfileId
+import org.universe.utils.getRandomString
 import kotlin.test.*
 
 class EntitySupplierCompanionTest : KoinTest {

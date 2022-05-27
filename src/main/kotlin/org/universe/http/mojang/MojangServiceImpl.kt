@@ -1,9 +1,9 @@
 package org.universe.http.mojang
 
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
 import org.universe.http.supplier.EntitySupplier
 import org.universe.http.supplier.Strategizable
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * Service to retrieve data using Mojang api.

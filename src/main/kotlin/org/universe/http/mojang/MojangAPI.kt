@@ -1,7 +1,7 @@
 package org.universe.http.mojang
 
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * Use to interact with Mojang api.

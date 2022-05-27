@@ -1,10 +1,10 @@
 package org.universe.http.supplier
 
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
- * An abstraction that allows for requesting Discord entities.
+ * An abstraction that allows for requesting entities.
  *
  * @see RestEntitySupplier
  * @see CacheEntitySupplier

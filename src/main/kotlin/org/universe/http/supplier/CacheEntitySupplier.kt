@@ -4,8 +4,8 @@ import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.query
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * [EntitySupplier] that uses a [DataCache] to resolve entities.

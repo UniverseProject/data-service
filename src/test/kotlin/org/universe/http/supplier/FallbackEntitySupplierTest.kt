@@ -6,9 +6,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.universe.http.utils.createProfileId
-import org.universe.http.utils.createProfileSkin
-import org.universe.http.utils.getRandomString
+import org.universe.utils.createProfileId
+import org.universe.utils.createProfileSkin
+import org.universe.utils.getRandomString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

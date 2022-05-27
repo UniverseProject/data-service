@@ -13,9 +13,9 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.universe.http.mojang.MojangAPI
-import org.universe.http.utils.createProfileId
-import org.universe.http.utils.createProfileSkin
-import org.universe.http.utils.getRandomString
+import org.universe.utils.createProfileId
+import org.universe.utils.createProfileSkin
+import org.universe.utils.getRandomString
 import kotlin.test.*
 
 class RestEntitySupplierTest : KoinTest {

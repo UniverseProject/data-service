@@ -6,8 +6,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * Implementation of the [MojangAPI] interface to interact with the Mojang API.

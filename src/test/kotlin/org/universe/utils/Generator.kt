@@ -1,7 +1,7 @@
-package org.universe.http.utils
+package org.universe.utils
 
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 import java.util.*
 
 val stringGenerator = generateSequence { UUID.randomUUID().toString() }.distinct().iterator()

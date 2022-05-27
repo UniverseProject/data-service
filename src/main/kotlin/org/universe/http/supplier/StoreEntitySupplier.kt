@@ -4,8 +4,8 @@ import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * [EntitySupplier] that delegates to another [EntitySupplier] to resolve entities.

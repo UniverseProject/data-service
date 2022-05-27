@@ -12,11 +12,11 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.universe.http.mojang.model.ProfileId
-import org.universe.http.mojang.model.ProfileSkin
-import org.universe.http.utils.createProfileId
-import org.universe.http.utils.createProfileSkin
-import org.universe.http.utils.getRandomString
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
+import org.universe.utils.createProfileId
+import org.universe.utils.createProfileSkin
+import org.universe.utils.getRandomString
 import kotlin.test.*
 
 class CacheEntitySupplierTest : KoinTest {
