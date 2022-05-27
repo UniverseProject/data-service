@@ -7,14 +7,15 @@ import java.util.*
 
 const val MAX_PSEUDO_LENGTH = 16
 
-object ClientIdentities : Table() {
+object ClientIdentities : Table(ClientIdentity::class.simpleName!!) {
     val uuid = uuid("uuid").uniqueIndex()
     val name = varchar("name", MAX_PSEUDO_LENGTH)
+    override val primaryKey = PrimaryKey(uuid)
 }
 
 @Serializable
 data class ClientIdentity(
     @Serializable(with = UUIDSerializer::class)
-    val uuid: UUID,
-    val name: String
+    var uuid: UUID,
+    var name: String
 )
