@@ -16,6 +16,7 @@ repositories {
     }
 }
 
+val kotlinVersion: String by project
 val koinVersion: String by project
 val ktorVersion: String by project
 val ktSerializationVersion: String by project
@@ -25,6 +26,8 @@ val loggingVersion: String by project
 val slf4jVersion: String by project
 val mockkVersion: String by project
 val junitVersion: String by project
+val testContainersVersion: String by project
+val psqlVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
@@ -37,7 +40,7 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:$koinVersion") {
         // Problem with koin and junit
         // There is a conflict between the dependencies of both
-        // So the solution is : Exclude the junit dependencies from one
+        // So the solution is : Exclude the junit dependencies
         exclude("org.jetbrains.kotlin", "kotlin-test-junit")
     }
 
@@ -55,6 +58,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.postgresql:postgresql:$psqlVersion")
 
     // Cache with map (for local without real service) or redis
     implementation("dev.kord.cache:cache-api:$cacheVersion")
@@ -64,6 +68,7 @@ dependencies {
     // Logging information
     implementation("io.github.microutils:kotlin-logging:$loggingVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    implementation("org.slf4j:slf4j-simple:$slf4jVersion")
 
     // Create fake instance (mock) of components for tests
     testImplementation("io.mockk:mockk:$mockkVersion")
@@ -71,6 +76,8 @@ dependencies {
     // Junit to run tests
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 }
 
 tasks {
