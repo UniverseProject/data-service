@@ -28,7 +28,18 @@ jobs:
     - name: Set permission to execute gradle
       run: chmod +x gradlew
 
-    - name: Build project
+    - name: Build
       uses: gradle/gradle-build-action@v2.1.6
       with:
-        arguments: build
+        arguments: build -x test
+
+    - name: Test
+      uses: gradle/gradle-build-action@v2.1.6
+      with:
+        arguments: test
+
+    - name: Test Summary
+      if: always()
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      with:
+        files: "**/build/test-results/test/TEST-*.xml"
