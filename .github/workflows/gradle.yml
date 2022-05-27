@@ -1,15 +1,18 @@
 name: Build
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
+  pull_request:
+    types:
+      - synchronize
+#  push:
+#    paths-ignore:
+#      - '**.md'
   workflow_dispatch:
     branches:
       - master
 
 concurrency:
-  group: check-${{ github.ref }}
+  group: build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
