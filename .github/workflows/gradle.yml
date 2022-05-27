@@ -1,12 +1,13 @@
 name: Build
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
+    paths-ignore:
+      - '**.md'
     types:
       - synchronize
-#  push:
-#    paths-ignore:
-#      - '**.md'
   workflow_dispatch:
     branches:
       - master
@@ -48,10 +49,16 @@ jobs:
         files: "**/build/test-results/test/TEST-*.xml"
 
     - name: Add coverage to PR
-      id: jacoco
-      uses: madrapps/jacoco-report@v1.2
+      id: kover-tests
+      uses: stevenleadbeater/kotlin-kover-action@v1.0.0
       with:
-        token: ${{ github.token }}
-        paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
-        min-coverage-overall: 80
-        min-coverage-changed-files: 80
+        coverage-threshold: 80
+        repo-token: ${{ github.token }}
+#    - name: Add coverage to PR
+#      id: jacoco
+#      uses: madrapps/jacoco-report@v1.2
+#      with:
+#        token: ${{ github.token }}
+#        paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+#        min-coverage-overall: 80
+#        min-coverage-changed-files: 80
