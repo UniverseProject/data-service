@@ -28,10 +28,18 @@ jobs:
     - name: Set permission to execute gradle
       run: chmod +x gradlew
 
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: kotlin
+
     - name: Build
       uses: gradle/gradle-build-action@v2.1.6
       with:
         arguments: build -x test
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
 
     - name: Test
       uses: gradle/gradle-build-action@v2.1.6
