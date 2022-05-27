@@ -1,0 +1,28 @@
+name: Check-Dependabot
+
+on:
+  pull_request_target:
+    branches:
+      - 'dependabot-**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout project
+      uses: actions/checkout@v3
+
+    - name: Initialization
+      uses: ./.github/actions/init
+      with:
+        jdk: 17
+
+    - name: Build
+      uses: gradle/gradle-build-action@v2.1.6
+      with:
+        arguments: build -x test
+
+    - name: Test
+      uses: gradle/gradle-build-action@v2.1.6
+      with:
+        arguments: test
