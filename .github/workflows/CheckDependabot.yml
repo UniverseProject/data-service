@@ -1,16 +1,9 @@
-name: Build
+name: Check-Dependabot
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-  workflow_dispatch:
+  pull_request_target:
     branches:
-      - master
-
-concurrency:
-  group: check-${{ github.ref }}
-  cancel-in-progress: true
+      - 'dependabot-**'
 
 jobs:
   build:
@@ -37,9 +30,3 @@ jobs:
       uses: gradle/gradle-build-action@v2.1.6
       with:
         arguments: test
-
-    - name: Test Summary
-      if: always()
-      uses: EnricoMi/publish-unit-test-result-action@v1
-      with:
-        files: "**/build/test-results/test/TEST-*.xml"
