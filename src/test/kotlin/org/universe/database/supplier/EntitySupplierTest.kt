@@ -2,6 +2,7 @@ package org.universe.database.supplier
 
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.description
+import dev.kord.cache.api.put
 import dev.kord.cache.map.MapDataCache
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -15,29 +16,25 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.postgresql.Driver
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.database.client.createIdentity
+import org.universe.database.createPSQLContainer
 import org.universe.database.dao.ClientIdentities
 import org.universe.database.dao.ClientIdentity
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 @Testcontainers
 class EntitySupplierCompanionTest : KoinTest {
 
     @Container
-    private val psqlContainer = PostgreSQLContainer("postgres:alpine")
-        .withDatabaseName("db")
-        .withUsername("test")
-        .withPassword("test")
+    private val psqlContainer = createPSQLContainer()
 
     private val cache: DataCache by inject()
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
+    private lateinit var databaseSupplier: EntitySupplier
 
     @BeforeTest
     fun onBefore() {
@@ -68,6 +65,7 @@ class EntitySupplierCompanionTest : KoinTest {
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
+        databaseSupplier = DatabaseEntitySupplier()
     }
 
     @AfterTest
@@ -98,12 +96,25 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @Test
         fun `data found in database is saved into cache`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            val uuid = id.uuid
+            databaseSupplier.saveIdentity(id)
+
+            assertNull(cacheEntitySupplier.getIdentityByUUID(uuid))
+            assertEquals(id, supplier.getIdentityByUUID(uuid))
+            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(uuid))
         }
 
         @Test
         fun `data present in cache is not used to find value`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            val uuid = id.uuid
+            cache.put(id)
+
+            // The data is saved in the cache, but not in the database
+            // So if the supplier returns null, it's because the value from cache is not used
+            // And a database interaction is made
+            assertNull(supplier.getIdentityByUUID(uuid))
         }
     }
 
@@ -120,12 +131,22 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @Test
         fun `data found in database is not saved into cache`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            databaseSupplier.saveIdentity(id)
+
+            val uuid = id.uuid
+            assertEquals(id, supplier.getIdentityByUUID(uuid))
+            assertNull(cacheEntitySupplier.getIdentityByUUID(uuid))
         }
 
         @Test
         fun `data present in cache is use to avoid database call`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            cache.put(id)
+
+            val uuid = id.uuid
+            assertEquals(id, supplier.getIdentityByUUID(uuid))
+            assertNull(databaseSupplier.getIdentityByUUID(uuid))
         }
     }
 
@@ -142,12 +163,22 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @Test
         fun `data found in database is saved into cache`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            databaseSupplier.saveIdentity(id)
+
+            val uuid = id.uuid
+            assertEquals(id, supplier.getIdentityByUUID(uuid))
+            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(uuid))
         }
 
         @Test
         fun `data present in cache is use to avoid database call`(): Unit = runBlocking {
-            TODO()
+            val id = createIdentity()
+            cache.put(id)
+
+            val uuid = id.uuid
+            assertEquals(id, supplier.getIdentityByUUID(uuid))
+            assertNull(databaseSupplier.getIdentityByUUID(uuid))
         }
     }
 

@@ -11,10 +11,10 @@ import org.junit.jupiter.api.assertThrows
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.postgresql.Driver
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.database.client.createIdentity
+import org.universe.database.createPSQLContainer
 import org.universe.database.dao.ClientIdentities
 import org.universe.database.dao.ClientIdentity
 import kotlin.test.*
@@ -23,10 +23,7 @@ import kotlin.test.*
 class DatabaseEntitySupplierTest : KoinTest {
 
     @Container
-    private val psqlContainer = PostgreSQLContainer("postgres:alpine")
-        .withDatabaseName("db")
-        .withUsername("test")
-        .withPassword("test")
+    private val psqlContainer = createPSQLContainer()
 
     private lateinit var databaseEntitySupplier: DatabaseEntitySupplier
 
