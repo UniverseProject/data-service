@@ -37,7 +37,6 @@ class StoreEntitySupplierTest : KoinTest {
                     }
 
                     runBlocking {
-                        mapCache.register(description(ClientIdentity::name))
                         mapCache.register(description(ClientIdentity::uuid))
                     }
 
