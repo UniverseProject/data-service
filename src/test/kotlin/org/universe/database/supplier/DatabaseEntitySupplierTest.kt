@@ -1,4 +1,4 @@
-package org.universe.database.client.supplier
+package org.universe.database.supplier
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -16,7 +16,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentities
-import org.universe.database.supplier.DatabaseEntitySupplier
 import kotlin.test.*
 
 @Testcontainers

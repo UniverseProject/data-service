@@ -1,4 +1,4 @@
-package org.universe.database.client.supplier
+package org.universe.database.supplier
 
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.description
@@ -14,7 +14,6 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
-import org.universe.database.supplier.CacheEntitySupplier
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
 import org.universe.utils.getRandomString
