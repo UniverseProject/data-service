@@ -14,14 +14,14 @@ infix fun EntitySupplier.withFallback(other: EntitySupplier): EntitySupplier =
 /**
  * [EntitySupplier] that uses the first supplier to retrieve a data, if the value is null, get the data through the second supplier.
  */
-class FallbackEntitySupplier(private val first: EntitySupplier, private val second: EntitySupplier) : EntitySupplier {
+class FallbackEntitySupplier(val first: EntitySupplier, val second: EntitySupplier) : EntitySupplier {
 
     override suspend fun getIdentityByUUID(uuid: UUID): ClientIdentity? = invoke { it.getIdentityByUUID(uuid) }
 
     override suspend fun getIdentityByName(name: String): ClientIdentity? = invoke { it.getIdentityByName(name) }
 
     override suspend fun saveIdentity(identity: ClientIdentity) {
-        invoke { it.saveIdentity(identity) }
+        first.saveIdentity(identity)
     }
 
     /**
