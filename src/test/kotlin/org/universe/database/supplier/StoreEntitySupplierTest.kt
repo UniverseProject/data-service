@@ -3,6 +3,7 @@ package org.universe.database.supplier
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.description
 import dev.kord.cache.map.MapDataCache
+import io.mockk.MockKMatcherScope
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.mockk
@@ -54,55 +55,53 @@ class StoreEntitySupplierTest : KoinTest {
         stopKoin()
     }
 
-    interface StoreTest {
-        fun `data not stored into cache if data not exists`()
-        fun `data stored if found`()
+    abstract inner class StoreTest {
+
+        @Test
+        fun `data not stored into cache if data not exists`() = runBlocking {
+            val id = createIdentity()
+            coEvery { mockGetMethod(mockSupplier) } returns null
+            assertNull(getIdentity(storeEntitySupplier, id))
+            assertNull(getIdentity(cacheEntitySupplier, id))
+        }
+
+        @Test
+        fun `data stored if found`() = runBlocking {
+            val id = createIdentity()
+            coEvery { mockGetMethod(mockSupplier) } returns id
+            assertEquals(id, getIdentity(storeEntitySupplier, id))
+            assertEquals(id, getIdentity(cacheEntitySupplier, id))
+        }
+
+        abstract suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity?
+
+        abstract suspend fun MockKMatcherScope.mockGetMethod(supplier: EntitySupplier): ClientIdentity?
     }
 
     @Nested
     @DisplayName("Get identity by uuid")
-    inner class GetIdentityByUUID : StoreTest {
+    inner class GetIdentityByUUID : StoreTest() {
 
-        @Test
-        override fun `data not stored into cache if data not exists`() = runBlocking {
-            val id = createIdentity()
-            val uuid = id.uuid
-            coEvery { mockSupplier.getIdentityByUUID(uuid) } returns null
-            assertNull(storeEntitySupplier.getIdentityByUUID(uuid))
-            assertNull(cacheEntitySupplier.getIdentityByUUID(uuid))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByUUID(id.uuid)
         }
 
-        @Test
-        override fun `data stored if found`() = runBlocking{
-            val id = createIdentity()
-            val uuid = id.uuid
-            coEvery { mockSupplier.getIdentityByUUID(uuid) } returns id
-            assertEquals(id, storeEntitySupplier.getIdentityByUUID(uuid))
-            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(uuid))
+        override suspend fun MockKMatcherScope.mockGetMethod(supplier: EntitySupplier): ClientIdentity? {
+            return supplier.getIdentityByUUID(any())
         }
 
     }
 
     @Nested
     @DisplayName("Get identity by name")
-    inner class GetIdentityByName : StoreTest {
+    inner class GetIdentityByName : StoreTest() {
 
-        @Test
-        override fun `data not stored into cache if data not exists`() = runBlocking {
-            val id = createIdentity()
-            val name = id.name
-            coEvery { mockSupplier.getIdentityByName(name) } returns null
-            assertNull(storeEntitySupplier.getIdentityByName(name))
-            assertNull(cacheEntitySupplier.getIdentityByName(name))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByName(id.name)
         }
 
-        @Test
-        override fun `data stored if found`() = runBlocking{
-            val id = createIdentity()
-            val name = id.name
-            coEvery { mockSupplier.getIdentityByName(name) } returns id
-            assertEquals(id, storeEntitySupplier.getIdentityByName(name))
-            assertEquals(id, cacheEntitySupplier.getIdentityByName(name))
+        override suspend fun MockKMatcherScope.mockGetMethod(supplier: EntitySupplier): ClientIdentity? {
+            return supplier.getIdentityByName(any())
         }
 
     }

@@ -16,8 +16,6 @@ import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
-import org.universe.utils.getRandomString
-import java.util.*
 import kotlin.test.*
 
 class CacheEntitySupplierTest : KoinTest {
@@ -51,46 +49,43 @@ class CacheEntitySupplierTest : KoinTest {
         stopKoin()
     }
 
-    interface CacheTest {
-        fun `data is not into the cache`()
-        fun `data is retrieved from the cache`()
+    abstract inner class CacheTest {
+
+        @Test
+        fun `data is not into the cache`() = runBlocking {
+            val id = createIdentity()
+            cache.put(id)
+            assertNull(getIdentity(cacheEntitySupplier, createIdentity()))
+        }
+
+        @Test
+        fun `data is retrieved from the cache`() = runBlocking {
+            val id = createIdentity()
+            cache.put(id)
+            assertEquals(id, getIdentity(cacheEntitySupplier, id))
+        }
+
+        abstract suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity?
+
     }
 
     @Nested
     @DisplayName("Get identity by uuid")
-    inner class GetIdentityByUUID : CacheTest {
+    inner class GetIdentityByUUID : CacheTest() {
 
-        @Test
-        override fun `data is not into the cache`() = runBlocking {
-            val id = createIdentity()
-            cache.put(id)
-            assertNull(cacheEntitySupplier.getIdentityByUUID(UUID.randomUUID()))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByUUID(id.uuid)
         }
 
-        @Test
-        override fun `data is retrieved from the cache`() = runBlocking {
-            val id = createIdentity()
-            cache.put(id)
-            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(id.uuid))
-        }
     }
 
     @Nested
     @DisplayName("Get identity by name")
-    inner class GetIdentityByName: CacheTest {
+    inner class GetIdentityByName : CacheTest() {
 
-        @Test
-        override fun `data is not into the cache`() = runBlocking {
-            val id = createIdentity()
-            cache.put(id)
-            assertNull(cacheEntitySupplier.getIdentityByName(getRandomString()))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByName(id.name)
         }
 
-        @Test
-        override fun `data is retrieved from the cache`() = runBlocking {
-            val id = createIdentity()
-            cache.put(id)
-            assertEquals(id, cacheEntitySupplier.getIdentityByName(id.name))
-        }
     }
 }

@@ -16,6 +16,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentities
+import org.universe.database.dao.ClientIdentity
 import kotlin.test.*
 
 @Testcontainers
@@ -49,47 +50,42 @@ class DatabaseEntitySupplierTest : KoinTest {
         stopKoin()
     }
 
-    interface DatabaseTest {
-        fun `data not found from database`()
-        fun `data is retrieved from database`()
+    abstract inner class DatabaseTest {
+
+        @Test
+        fun `data is not into the database`() = runBlocking {
+            val id = createIdentity()
+            databaseEntitySupplier.saveIdentity(createIdentity())
+            assertNull(getIdentity(databaseEntitySupplier, id))
+        }
+
+        @Test
+        fun `data is retrieved from the database`() = runBlocking {
+            val id = createIdentity()
+            databaseEntitySupplier.saveIdentity(id)
+            assertEquals(id, getIdentity(databaseEntitySupplier, id))
+        }
+
+        abstract suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity?
+
     }
 
     @Nested
     @DisplayName("Get identity by uuid")
-    inner class GetIdentityByUUID : DatabaseTest {
+    inner class GetIdentityByUUID : DatabaseTest() {
 
-        @Test
-        override fun `data not found from database`(): Unit = runBlocking {
-            val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(createIdentity())
-            assertNull(databaseEntitySupplier.getIdentityByUUID(id.uuid))
-        }
-
-        @Test
-        override fun `data is retrieved from database`(): Unit = runBlocking {
-            val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(id)
-            assertEquals(id, databaseEntitySupplier.getIdentityByUUID(id.uuid))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByUUID(id.uuid)
         }
 
     }
 
     @Nested
     @DisplayName("Get identity by name")
-    inner class GetIdentityByName : DatabaseTest {
+    inner class GetIdentityByName : DatabaseTest() {
 
-        @Test
-        override fun `data not found from database`(): Unit = runBlocking {
-            val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(createIdentity())
-            assertNull(databaseEntitySupplier.getIdentityByName(id.name))
-        }
-
-        @Test
-        override fun `data is retrieved from database`(): Unit = runBlocking {
-            val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(id)
-            assertEquals(id, databaseEntitySupplier.getIdentityByName(id.name))
+        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
+            return supplier.getIdentityByName(id.name)
         }
 
     }
