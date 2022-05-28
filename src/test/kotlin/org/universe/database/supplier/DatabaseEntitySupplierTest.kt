@@ -35,8 +35,8 @@ class DatabaseEntitySupplierTest : KoinTest {
         Database.connect(
             url = psqlContainer.jdbcUrl,
             driver = Driver::class.java.name,
-            user = "test",
-            password = "test"
+            user = psqlContainer.username,
+            password = psqlContainer.password
         )
         transaction {
             SchemaUtils.create(ClientIdentities)
