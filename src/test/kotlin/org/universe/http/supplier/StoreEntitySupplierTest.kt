@@ -1,8 +1,6 @@
 package org.universe.http.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.map.MapDataCache
+import io.lettuce.core.RedisClient
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -12,13 +10,21 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.cache.CacheClient
+import org.universe.container.createRedisContainer
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
 import kotlin.test.*
 
+@Testcontainers
 class StoreEntitySupplierTest : KoinTest {
+
+    @Container
+    private val redisContainer = createRedisContainer()
+
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var storeEntitySupplier: StoreEntitySupplier
     private lateinit var mockSupplier: EntitySupplier
@@ -26,20 +32,12 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
+        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+
         startKoin {
             modules(
                 module {
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ProfileId::name))
-                        mapCache.register(description(ProfileSkin::id))
-                    }
-
-                    single { mapCache }
+                    single { cacheClient }
                 })
         }
         mockSupplier = mockk()

@@ -5,6 +5,8 @@ import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.source.yaml
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import org.universe.database.dao.ClientIdentity
+import org.universe.model.ProfileId
+import org.universe.model.ProfileSkin
 
 /**
  * Configuration for cache.
@@ -14,7 +16,7 @@ internal object CacheConfiguration : ConfigSpec("cache") {
     /**
      * Configuration to manage pool connection with cache system.
      */
-    internal object PoolConfiguration: ConfigSpec("pool") {
+    internal object PoolConfiguration : ConfigSpec("pool") {
         val minIdle by optional(GenericObjectPoolConfig.DEFAULT_MIN_IDLE)
         val maxIdle by optional(GenericObjectPoolConfig.DEFAULT_MAX_IDLE)
         val maxTotal by optional(GenericObjectPoolConfig.DEFAULT_MAX_TOTAL)
@@ -28,6 +30,20 @@ internal object CacheConfiguration : ConfigSpec("cache") {
         val useName by optional(false, description = "Allows the get and set from cache using client name")
         val prefixKey by optional("cliId:", description = "Prefix to register a data in cache")
     }
+
+    /**
+     * Configuration for cache for [ProfileSkin] data.
+     */
+    internal object ProfileSkinConfiguration : ConfigSpec("skin") {
+        val prefixKey by optional("skin:", description = "Prefix to register a data in cache")
+    }
+
+    /**
+     * Configuration for cache for [ProfileId] data.
+     */
+    internal object ProfileIdConfiguration : ConfigSpec("profId") {
+        val prefixKey by optional("profId:", description = "Prefix to register a data in cache")
+    }
 }
 
 /**
@@ -36,7 +52,7 @@ internal object CacheConfiguration : ConfigSpec("cache") {
 object ServiceConfiguration {
 
     internal var cacheConfiguration: Config = loadCacheConfiguration()
-    private set
+        private set
 
     /**
      * Reload all configurations of the services.

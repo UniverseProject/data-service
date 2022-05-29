@@ -1,8 +1,6 @@
 package org.universe.database.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.map.MapDataCache
+import io.lettuce.core.RedisClient
 import io.mockk.MockKMatcherScope
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -10,17 +8,27 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junitpioneer.jupiter.SetSystemProperty
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.cache.CacheClient
+import org.universe.configuration.ServiceConfiguration
+import org.universe.container.createRedisContainer
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
 import kotlin.test.*
 
+@Testcontainers
 class StoreEntitySupplierTest : KoinTest {
+
+    @Container
+    private val redisContainer = createRedisContainer()
+
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var storeEntitySupplier: StoreEntitySupplier
     private lateinit var mockSupplier: EntitySupplier
@@ -28,30 +36,25 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
+        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+
         startKoin {
             modules(
                 module {
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ClientIdentity::uuid))
-                    }
-
-                    single { mapCache }
+                    single { cacheClient }
                 })
         }
         mockSupplier = mockk()
         storeEntitySupplier = StoreEntitySupplier(mockSupplier)
         // Use to verify if data is inserted
         cacheEntitySupplier = CacheEntitySupplier()
+        ServiceConfiguration.reloadConfigurations()
     }
 
     @AfterTest
     fun onAfter() {
         stopKoin()
+        cacheClient.pool.close()
     }
 
     abstract inner class StoreTest {
@@ -79,6 +82,8 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by uuid")
+    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
     inner class GetIdentityByUUID : StoreTest() {
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
@@ -93,6 +98,8 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by name")
+    @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+    @SetSystemProperty(key = "cache.clientId.useName", value = "true")
     inner class GetIdentityByName : StoreTest() {
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
@@ -107,6 +114,8 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Save identity")
+    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
     inner class SaveIdentity {
 
         @Test

@@ -1,9 +1,6 @@
 package org.universe.database.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.api.put
-import dev.kord.cache.map.MapDataCache
+import io.lettuce.core.RedisClient
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -14,16 +11,14 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.koin.test.inject
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.universe.database.client.createIdentity
+import org.universe.cache.CacheClient
 import org.universe.container.createPSQLContainer
+import org.universe.container.createRedisContainer
+import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentities
-import org.universe.database.dao.ClientIdentity
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
 import kotlin.test.*
 
 @Testcontainers
@@ -32,7 +27,11 @@ class EntitySupplierCompanionTest : KoinTest {
     @Container
     private val psqlContainer = createPSQLContainer()
 
-    private val cache: DataCache by inject()
+    @Container
+    private val redisContainer = createRedisContainer()
+
+    private lateinit var cacheClient: CacheClient
+
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
     private lateinit var databaseSupplier: EntitySupplier
 
@@ -47,20 +46,13 @@ class EntitySupplierCompanionTest : KoinTest {
         transaction {
             SchemaUtils.create(ClientIdentities)
         }
-        
+
+        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+
         startKoin {
             modules(
                 module {
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ClientIdentity::uuid))
-                    }
-
-                    single { mapCache }
+                    single { cacheClient }
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
@@ -70,6 +62,7 @@ class EntitySupplierCompanionTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
+        cacheClient.pool.close()
     }
 
     @Test
@@ -108,7 +101,7 @@ class EntitySupplierCompanionTest : KoinTest {
         fun `data present in cache is not used to find value`(): Unit = runBlocking {
             val id = createIdentity()
             val uuid = id.uuid
-            cache.put(id)
+            cacheEntitySupplier.saveIdentity(id)
 
             // The data is saved in the cache, but not in the database
             // So if the supplier returns null, it's because the value from cache is not used
@@ -141,7 +134,7 @@ class EntitySupplierCompanionTest : KoinTest {
         @Test
         fun `data present in cache is use to avoid database call`(): Unit = runBlocking {
             val id = createIdentity()
-            cache.put(id)
+            cacheEntitySupplier.saveIdentity(id)
 
             val uuid = id.uuid
             assertEquals(id, supplier.getIdentityByUUID(uuid))
@@ -173,7 +166,7 @@ class EntitySupplierCompanionTest : KoinTest {
         @Test
         fun `data present in cache is use to avoid database call`(): Unit = runBlocking {
             val id = createIdentity()
-            cache.put(id)
+            cacheEntitySupplier.saveIdentity(id)
 
             val uuid = id.uuid
             assertEquals(id, supplier.getIdentityByUUID(uuid))

@@ -1,45 +1,39 @@
 package org.universe.http.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.api.put
-import dev.kord.cache.map.MapDataCache
+import io.lettuce.core.RedisClient
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.cache.CacheClient
+import org.universe.container.createRedisContainer
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
 import org.universe.utils.getRandomString
 import kotlin.test.*
 
+@Testcontainers
 class CacheEntitySupplierTest : KoinTest {
 
-    private val cache: DataCache by inject()
+    @Container
+    private val redisContainer = createRedisContainer()
+
+    private lateinit var cacheClient: CacheClient
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
     fun onBefore() {
+        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+
         startKoin {
             modules(
                 module {
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ProfileId::name))
-                        mapCache.register(description(ProfileSkin::id))
-                    }
-
-                    single { mapCache }
+                    single { cacheClient }
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
@@ -48,6 +42,7 @@ class CacheEntitySupplierTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
+        cacheClient.pool.close()
     }
 
     interface CacheTest {
@@ -62,14 +57,14 @@ class CacheEntitySupplierTest : KoinTest {
         @Test
         override fun `data is not into the cache`() = runBlocking {
             val id = createProfileId()
-            cache.put(id)
+            cacheEntitySupplier.save(id)
             assertNull(cacheEntitySupplier.getId(getRandomString()))
         }
 
         @Test
         override fun `data is retrieved from the cache`() = runBlocking {
             val id = createProfileId()
-            cache.put(id)
+            cacheEntitySupplier.save(id)
             assertEquals(id, cacheEntitySupplier.getId(id.name))
         }
     }
@@ -81,14 +76,14 @@ class CacheEntitySupplierTest : KoinTest {
         @Test
         override fun `data is not into the cache`() = runBlocking {
             val skin = createProfileSkin()
-            cache.put(skin)
+            cacheEntitySupplier.save(skin)
             assertNull(cacheEntitySupplier.getSkin(getRandomString()))
         }
 
         @Test
         override fun `data is retrieved from the cache`() = runBlocking {
             val skin = createProfileSkin()
-            cache.put(skin)
+            cacheEntitySupplier.save(skin)
             assertEquals(skin, cacheEntitySupplier.getSkin(skin.id))
         }
     }

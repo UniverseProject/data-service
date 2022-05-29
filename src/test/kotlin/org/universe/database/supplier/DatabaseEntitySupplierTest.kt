@@ -13,8 +13,8 @@ import org.koin.test.KoinTest
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.universe.database.client.createIdentity
 import org.universe.container.createPSQLContainer
+import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentities
 import org.universe.database.dao.ClientIdentity
 import kotlin.test.*

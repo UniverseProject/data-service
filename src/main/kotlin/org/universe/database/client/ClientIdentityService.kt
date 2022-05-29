@@ -1,12 +1,13 @@
 package org.universe.database.client
 
 import org.universe.database.dao.ClientIdentity
+import org.universe.database.supplier.Strategizable
 import java.util.*
 
 /**
  * Service to retrieve data about clients.
  */
-interface ClientIdentityService {
+interface ClientIdentityService: Strategizable {
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].
