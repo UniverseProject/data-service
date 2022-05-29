@@ -11,7 +11,7 @@ import java.util.*
 /**
  * Serializer for UUID value.
  */
-class UUIDSerializer : KSerializer<UUID> {
+object UUIDSerializer : KSerializer<UUID> {
 
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("uuid", PrimitiveKind.STRING)
 
