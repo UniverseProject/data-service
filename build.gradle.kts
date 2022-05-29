@@ -26,9 +26,12 @@ val loggingVersion: String by project
 val slf4jVersion: String by project
 val mockkVersion: String by project
 val junitVersion: String by project
+val junitPioneerVersion: String by project
 val testContainersVersion: String by project
 val psqlVersion: String by project
 val konfVersion: String by project
+val lettuceVersion: String by project
+val apachePoolVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
@@ -65,8 +68,8 @@ dependencies {
     implementation("dev.kord.cache:cache-api:$cacheVersion")
     implementation("dev.kord.cache:cache-map:$cacheVersion")
     implementation("dev.kord.cache:cache-redis:$cacheVersion")
-    implementation("io.lettuce:lettuce-core:6.1.8.RELEASE")
-    implementation("org.apache.commons:commons-pool2:2.4.3")
+    implementation("io.lettuce:lettuce-core:$lettuceVersion")
+    implementation("org.apache.commons:commons-pool2:$apachePoolVersion")
 
     // Logging information
     implementation("io.github.microutils:kotlin-logging:$loggingVersion")
@@ -79,6 +82,7 @@ dependencies {
     // Junit to run tests
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testImplementation("org.junit-pioneer:junit-pioneer:$junitPioneerVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 

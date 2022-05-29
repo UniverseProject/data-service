@@ -4,12 +4,14 @@ import io.lettuce.core.RedisClient
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junitpioneer.jupiter.SetSystemProperty
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.configuration.ServiceConfiguration
 import org.universe.container.createRedisContainer
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
@@ -35,6 +37,7 @@ class CacheEntitySupplierTest : KoinTest {
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
+        ServiceConfiguration.reloadConfigurations()
     }
 
     @AfterTest
@@ -64,6 +67,8 @@ class CacheEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by uuid")
+    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
     inner class GetIdentityByUUID : CacheTest() {
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
@@ -74,6 +79,8 @@ class CacheEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by name")
+    @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+    @SetSystemProperty(key = "cache.clientId.useName", value = "true")
     inner class GetIdentityByName : CacheTest() {
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
@@ -87,6 +94,8 @@ class CacheEntitySupplierTest : KoinTest {
     inner class SaveIdentity {
 
         @Test
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
         fun `save identity with uuid not exists`() = runBlocking {
             val id = createIdentity()
             val uuid = id.uuid
@@ -96,6 +105,8 @@ class CacheEntitySupplierTest : KoinTest {
         }
 
         @Test
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
         fun `save identity but uuid already exists`() = runBlocking {
             val id = createIdentity()
             val idKey = id.uuid
@@ -110,6 +121,8 @@ class CacheEntitySupplierTest : KoinTest {
         }
 
         @Test
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
         fun `save identity but name already exists`() = runBlocking {
             val id = createIdentity()
             val idKey = id.name

@@ -1,6 +1,5 @@
 package org.universe.database.supplier
 
-import com.uchuhimo.konf.Config
 import dev.kord.cache.api.DataCache
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
@@ -14,31 +13,47 @@ import org.apache.commons.pool2.impl.GenericObjectPool
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.universe.configuration.AppConfiguration
+import org.universe.configuration.CacheConfiguration
+import org.universe.configuration.ServiceConfiguration.cacheConfiguration
 import org.universe.database.client.ClientIdentityService
 import org.universe.database.dao.ClientIdentity
 import org.universe.serializer.UUIDSerializer
 import java.util.*
 
-private val ENCODER = ProtoBuf {
+/**
+ * [ProtoBuf] is used to transform data to [ByteArray] and vice-versa.
+ * [ByteArray] type is used to maximize the compatibility with all data type.
+ */
+private val PROTOBUF = ProtoBuf {
     encodeDefaults = false
 }
 
 /**
  * [EntitySupplier] that uses a [DataCache] to resolve entities.
+ * @property client Client cache to get and set data.
+ * @property pool Pool of connection from [client].
+ * @property clientIdentityCacheService ClientIdentityCacheService
  */
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
 class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
-    private val redis: RedisClient by inject()
-
-    private val configuration: Config by inject()
+    private val client: RedisClient by inject()
 
     private var pool: GenericObjectPool<StatefulRedisConnection<ByteArray, ByteArray>> = createGenericObjectPool(
-        { redis.connect(ByteArrayCodec.INSTANCE) },
-        GenericObjectPoolConfig()
+        { client.connect(ByteArrayCodec.INSTANCE) },
+        GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>>().apply {
+            minIdle = cacheConfiguration[CacheConfiguration.PoolConfiguration.minIdle]
+            maxIdle = cacheConfiguration[CacheConfiguration.PoolConfiguration.maxIdle]
+            maxTotal = cacheConfiguration[CacheConfiguration.PoolConfiguration.maxTotal]
+        }
     )
 
+    /**
+     * Use a connection from the [pool] to interact with the cache.
+     * At the end of the method, the connection is returned to the pool.
+     * @param body Function using the connection.
+     * @return An instance from [body].
+     */
     private inline fun <T> withConnection(body: (RedisCoroutinesCommands<ByteArray, ByteArray>) -> T): T {
         return pool.borrowObject().use {
             body(it.coroutines())
@@ -53,13 +68,19 @@ class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
     override suspend fun saveIdentity(identity: ClientIdentity) = clientIdentityCacheService.save(identity)
 
+    /**
+     * Cache service for [ClientIdentity].
+     * @property prefixKey Prefix key to identify the data in cache.
+     * @property cacheByUUID `true` if the data should be stored by the [uuid][ClientIdentity.uuid].
+     * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
+     */
     internal inner class ClientIdentityCacheService : ClientIdentityService {
 
-        private val prefixKey get() = configuration[AppConfiguration.CacheConfiguration.ClientIdentityConfiguration.prefixKey]
+        private val prefixKey get() = cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.prefixKey]
 
-        private val cacheByUUID get() = configuration[AppConfiguration.CacheConfiguration.ClientIdentityConfiguration.cacheByUUID]
+        private val cacheByUUID get() = cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.useUUID]
 
-        private val cacheByName get() = configuration[AppConfiguration.CacheConfiguration.ClientIdentityConfiguration.cacheByName]
+        private val cacheByName get() = cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.useName]
 
         override suspend fun getByUUID(uuid: UUID): ClientIdentity? {
             if (!cacheByUUID) {
@@ -102,14 +123,33 @@ class CacheEntitySupplier : EntitySupplier, KoinComponent {
             }
         }
 
+        /**
+         * Create the key from the [uuid][ClientIdentity.uuid] to identify data in cache.
+         * @param uuid Id of a client.
+         * @return [ByteArray] corresponding to the key using the [prefixKey] and [uuid].
+         */
         private fun getKey(uuid: UUID): ByteArray = prefixKey.encodeToByteArray() + encodeToByteArray(uuid)
 
+        /**
+         * Create the key from a [String] value to identify data in cache.
+         * @param value Value using to create key.
+         * @return [ByteArray] corresponding to the key using the [prefixKey] and [value].
+         */
         private fun getKey(value: String): ByteArray = "$prefixKey$value".encodeToByteArray()
 
-        private fun encodeToByteArray(uuid: UUID): ByteArray = ENCODER.encodeToByteArray(UUIDSerializer, uuid)
+        /**
+         * Transform a [UUID] to a [ByteArray] by encoding data using [PROTOBUF].
+         * @param uuid UUID.
+         * @return Result of the serialization of [uuid].
+         */
+        private fun encodeToByteArray(uuid: UUID): ByteArray = PROTOBUF.encodeToByteArray(UUIDSerializer, uuid)
 
+        /***
+         * Transform a [ByteArray] to a [UUID] by decoding data using [PROTOBUF].
+         * @param uuidSerial Serialization of a [UUID] value.
+         * @return The [UUID] value from the [uuidSerial] decoded.
+         */
         private fun decodeFromByteArrayToUUID(uuidSerial: ByteArray): UUID =
-            ENCODER.decodeFromByteArray(UUIDSerializer, uuidSerial)
-
+            PROTOBUF.decodeFromByteArray(UUIDSerializer, uuidSerial)
     }
 }
