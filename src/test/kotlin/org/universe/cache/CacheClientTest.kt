@@ -84,9 +84,9 @@ class CacheClientTest {
     @Test
     fun `pool configuration is used to create pool`() {
         val poolConfig = BoundedPoolConfig.builder()
-            .maxIdle(Random.nextInt(Int.MIN_VALUE, Int.MAX_VALUE))
-            .minIdle(Random.nextInt(Int.MIN_VALUE, Int.MAX_VALUE))
-            .maxTotal(Random.nextInt(Int.MIN_VALUE, Int.MAX_VALUE))
+            .maxIdle(Random.nextInt(0, 100))
+            .minIdle(Random.nextInt(-100, 0))
+            .maxTotal(Random.nextInt(1000, 2000))
             .build()
 
         val client = CacheClient(RedisURI.create(redisContainer.url), poolConfiguration = poolConfig)
