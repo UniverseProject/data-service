@@ -1,6 +1,6 @@
 package org.universe.database.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import io.mockk.MockKMatcherScope
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -25,8 +25,11 @@ import kotlin.test.*
 @Testcontainers
 class StoreEntitySupplierTest : KoinTest {
 
-    @Container
-    private val redisContainer = createRedisContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheClient: CacheClient
 
@@ -36,7 +39,7 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(

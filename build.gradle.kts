@@ -95,9 +95,7 @@ kotlin {
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
-                optIn("kotlin.contracts.ExperimentalContracts")
                 optIn("kotlin.ExperimentalStdlibApi")
-                optIn("kotlin.time.ExperimentalTime")
             }
         }
     }

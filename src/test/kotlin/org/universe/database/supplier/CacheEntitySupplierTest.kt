@@ -1,6 +1,6 @@
 package org.universe.database.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -22,8 +22,11 @@ import kotlin.test.*
 @Testcontainers
 class CacheEntitySupplierTest : KoinTest {
 
-    @Container
-    private val redisContainer = createRedisContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
@@ -31,7 +34,7 @@ class CacheEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
         startKoin {
             modules(
                 module {

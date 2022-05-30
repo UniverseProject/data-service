@@ -1,6 +1,6 @@
 package org.universe.database.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -24,11 +24,15 @@ import kotlin.test.*
 @Testcontainers
 class EntitySupplierCompanionTest : KoinTest {
 
-    @Container
-    private val psqlContainer = createPSQLContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val psqlContainer = createPSQLContainer()
 
-    @Container
-    private val redisContainer = createRedisContainer()
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheClient: CacheClient
 
@@ -47,7 +51,7 @@ class EntitySupplierCompanionTest : KoinTest {
             SchemaUtils.create(ClientIdentities)
         }
 
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(

@@ -1,6 +1,6 @@
 package org.universe.http.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,15 +20,18 @@ import kotlin.test.*
 @Testcontainers
 class CacheEntitySupplierTest : KoinTest {
 
-    @Container
-    private val redisContainer = createRedisContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheClient: CacheClient
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
     fun onBefore() {
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(
@@ -71,7 +74,7 @@ class CacheEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get skin by id")
-    inner class GetSkin: CacheTest {
+    inner class GetSkin : CacheTest {
 
         @Test
         override fun `data is not into the cache`() = runBlocking {

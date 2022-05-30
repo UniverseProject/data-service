@@ -3,7 +3,6 @@ package org.universe.configuration
 import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.source.yaml
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import org.universe.database.dao.ClientIdentity
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
@@ -12,15 +11,6 @@ import org.universe.model.ProfileSkin
  * Configuration for cache.
  */
 internal object CacheConfiguration : ConfigSpec("cache") {
-
-    /**
-     * Configuration to manage pool connection with cache system.
-     */
-    internal object PoolConfiguration : ConfigSpec("pool") {
-        val minIdle by optional(GenericObjectPoolConfig.DEFAULT_MIN_IDLE)
-        val maxIdle by optional(GenericObjectPoolConfig.DEFAULT_MAX_IDLE)
-        val maxTotal by optional(GenericObjectPoolConfig.DEFAULT_MAX_TOTAL)
-    }
 
     /**
      * Configuration for cache for [ClientIdentity] data.

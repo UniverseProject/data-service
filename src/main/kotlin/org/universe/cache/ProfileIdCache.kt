@@ -1,5 +1,8 @@
 package org.universe.cache
 
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.serializer
 import org.universe.configuration.CacheConfiguration
 import org.universe.configuration.ServiceConfiguration
 import org.universe.model.ProfileId
@@ -22,7 +25,7 @@ internal class ProfileIdCache(val client: CacheClient) {
         return client.connect {
             val key = getKey(name)
             val dataSerial = it.get(key) ?: return null
-            val uuid = dataSerial.decodeToString()
+            val uuid = decodeFromByteArray(String.serializer(), dataSerial)
             ProfileId(id = uuid, name = name)
         }
     }
@@ -34,7 +37,7 @@ internal class ProfileIdCache(val client: CacheClient) {
     suspend fun save(profile: ProfileId) {
         client.connect {
             val key = getKey(profile.name)
-            it.set(key, profile.id.encodeToByteArray())
+            it.set(key, encodeToByteArray(String.serializer(), profile.id))
         }
     }
 
@@ -43,5 +46,21 @@ internal class ProfileIdCache(val client: CacheClient) {
      * @param value Value using to create key.
      * @return [ByteArray] corresponding to the key using the [prefixKey] and [value].
      */
-    private fun getKey(value: String): ByteArray = "$prefixKey$value".encodeToByteArray()
+    private fun getKey(value: String): ByteArray = encodeToByteArray(String.serializer(), "$prefixKey$value")
+
+    /**
+     * Transform an instance to a [ByteArray] by encoding data using [binaryFormat][CacheClient.binaryFormat].
+     * @param value Value that will be serialized.
+     * @return Result of the serialization of [value].
+     */
+    private fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray =
+        client.binaryFormat.encodeToByteArray(serializer, value)
+
+    /***
+     * Transform a [ByteArray] to a value by decoding data using [binaryFormat][CacheClient.binaryFormat].
+     * @param valueSerial Serialization of the value.
+     * @return The value from the [valueSerial] decoded.
+     */
+    private fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, valueSerial: ByteArray): T =
+        client.binaryFormat.decodeFromByteArray(deserializer, valueSerial)
 }

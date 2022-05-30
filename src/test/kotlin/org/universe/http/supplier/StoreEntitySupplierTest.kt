@@ -1,6 +1,6 @@
 package org.universe.http.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -21,8 +21,11 @@ import kotlin.test.*
 @Testcontainers
 class StoreEntitySupplierTest : KoinTest {
 
-    @Container
-    private val redisContainer = createRedisContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheClient: CacheClient
 
@@ -32,7 +35,7 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(
@@ -70,7 +73,7 @@ class StoreEntitySupplierTest : KoinTest {
         }
 
         @Test
-        override fun `data stored if found`() = runBlocking{
+        override fun `data stored if found`() = runBlocking {
             val id = createProfileId()
             val name = id.name
             coEvery { mockSupplier.getId(name) } returns id
@@ -94,7 +97,7 @@ class StoreEntitySupplierTest : KoinTest {
         }
 
         @Test
-        override fun `data stored if found`() = runBlocking{
+        override fun `data stored if found`() = runBlocking {
             val skin = createProfileSkin()
             val uuid = skin.id
             coEvery { mockSupplier.getSkin(uuid) } returns skin

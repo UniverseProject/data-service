@@ -1,6 +1,6 @@
 package org.universe.http.supplier
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -25,8 +25,11 @@ import kotlin.test.*
 @Testcontainers
 class EntitySupplierCompanionTest : KoinTest {
 
-    @Container
-    private val redisContainer = createRedisContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val redisContainer = createRedisContainer()
+    }
 
     private lateinit var cacheClient: CacheClient
 
@@ -35,7 +38,7 @@ class EntitySupplierCompanionTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
-        cacheClient = CacheClient(RedisClient.create(redisContainer.url))
+        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(

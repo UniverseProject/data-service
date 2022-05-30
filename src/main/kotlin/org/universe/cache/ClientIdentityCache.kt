@@ -40,7 +40,7 @@ internal class ClientIdentityCache(val client: CacheClient) {
         return client.connect {
             val key = getKey(uuid.toString())
             val nameSerial = it.get(key) ?: return null
-            ClientIdentity(uuid, nameSerial.decodeToString())
+            ClientIdentity(uuid, decodeFromByteArray(String.serializer(), nameSerial))
         }
     }
 
@@ -93,14 +93,15 @@ internal class ClientIdentityCache(val client: CacheClient) {
      * @param value Value using to create key.
      * @return [ByteArray] corresponding to the key using the [prefixKey] and [value].
      */
-    private fun getKey(value: String): ByteArray = client.binaryFormat.encodeToByteArray(String.serializer(), "$prefixKey$value")
+    private fun getKey(value: String): ByteArray = encodeToByteArray(String.serializer(), "$prefixKey$value")
 
     /**
      * Transform an instance to a [ByteArray] by encoding data using [binaryFormat][CacheClient.binaryFormat].
      * @param value Value that will be serialized.
      * @return Result of the serialization of [value].
      */
-    private fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray = client.binaryFormat.encodeToByteArray(serializer, value)
+    private fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray =
+        client.binaryFormat.encodeToByteArray(serializer, value)
 
     /***
      * Transform a [ByteArray] to a value by decoding data using [binaryFormat][CacheClient.binaryFormat].

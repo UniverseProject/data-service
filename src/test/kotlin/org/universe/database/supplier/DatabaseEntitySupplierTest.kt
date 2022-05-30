@@ -22,8 +22,11 @@ import kotlin.test.*
 @Testcontainers
 class DatabaseEntitySupplierTest : KoinTest {
 
-    @Container
-    private val psqlContainer = createPSQLContainer()
+    companion object {
+        @JvmStatic
+        @Container
+        val psqlContainer = createPSQLContainer()
+    }
 
     private lateinit var databaseEntitySupplier: DatabaseEntitySupplier
 

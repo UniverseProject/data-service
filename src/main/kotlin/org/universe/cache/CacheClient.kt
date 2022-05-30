@@ -1,32 +1,32 @@
 package org.universe.cache
 
 import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.codec.ByteArrayCodec
-import io.lettuce.core.support.ConnectionPoolSupport
+import io.lettuce.core.support.AsyncConnectionPoolSupport
+import io.lettuce.core.support.BoundedAsyncPool
+import io.lettuce.core.support.BoundedPoolConfig
+import kotlinx.coroutines.future.await
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.apache.commons.pool2.impl.GenericObjectPool
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig
-import org.universe.configuration.CacheConfiguration
-import org.universe.configuration.ServiceConfiguration
 
 /**
  * Wrapper of [RedisClient] using pool to manage connection.
+ * @property uri URI to connect the client.
  * @property client Redis client.
+ * @property binaryFormat Object to encode and decode information.
  * @property pool Pool of connection from [client].
  */
 class CacheClient(
-    private val client: RedisClient,
+    val uri: RedisURI,
+    val client: RedisClient = RedisClient.create(),
     val binaryFormat: BinaryFormat = DEFAULT_BINARY_FORMAT,
-    poolConfiguration: GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>> =
-        GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>>().apply {
-            minIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.minIdle]
-            maxIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxIdle]
-            maxTotal = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxTotal]
-        }
+    poolConfiguration: BoundedPoolConfig = BoundedPoolConfig.builder()
+        .maxTotal(-1)
+        .build()
 ) : AutoCloseable {
 
     companion object {
@@ -39,9 +39,9 @@ class CacheClient(
         }
     }
 
-    val pool: GenericObjectPool<StatefulRedisConnection<ByteArray, ByteArray>> =
-        ConnectionPoolSupport.createGenericObjectPool(
-            { client.connect(ByteArrayCodec.INSTANCE) },
+    val pool: BoundedAsyncPool<StatefulRedisConnection<ByteArray, ByteArray>> =
+        AsyncConnectionPoolSupport.createBoundedObjectPool(
+            { client.connectAsync(ByteArrayCodec.INSTANCE, uri) },
             poolConfiguration
         )
 
@@ -51,13 +51,33 @@ class CacheClient(
      * @param body Function using the connection.
      * @return An instance from [body].
      */
-    inline fun <T> connect(body: (RedisCoroutinesCommands<ByteArray, ByteArray>) -> T): T {
-        return pool.borrowObject().use {
-            body(it.coroutines())
+    suspend inline fun <T> connect(body: (RedisCoroutinesCommands<ByteArray, ByteArray>) -> T): T {
+        val connection = pool.acquire().await()
+        return try {
+            body(connection.coroutines())
+        } finally {
+            pool.release(connection).await()
         }
     }
 
     override fun close() {
-        pool.close()
+        try {
+            pool.close()
+        } finally {
+            client.shutdown()
+        }
     }
+
+    /**
+     * Requests to close this object and releases any system resources associated with it. If the object is already closed then invoking this method has no effect.
+     * All connections from the [pool] will be closed.
+     */
+    suspend fun closeAsync() {
+        try {
+            pool.closeAsync().await()
+        } finally {
+            client.shutdownAsync().await()
+        }
+    }
+
 }
