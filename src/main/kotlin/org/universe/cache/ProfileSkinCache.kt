@@ -1,8 +1,6 @@
 package org.universe.cache
 
 import kotlinx.serialization.encodeToByteArray
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.universe.configuration.CacheConfiguration
 import org.universe.configuration.ServiceConfiguration
 import org.universe.model.ProfileSkin
@@ -12,9 +10,7 @@ import org.universe.model.ProfileSkin
  * @property client Cache client.
  * @property prefixKey Prefix key to identify the data in cache.
  */
-internal class ProfileSkinCache : KoinComponent {
-
-    private val client: CacheClient by inject()
+internal class ProfileSkinCache(val client: CacheClient) {
 
     private val prefixKey get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ProfileSkinConfiguration.prefixKey]
 

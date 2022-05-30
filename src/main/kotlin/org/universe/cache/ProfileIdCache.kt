@@ -1,7 +1,5 @@
 package org.universe.cache
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.universe.configuration.CacheConfiguration
 import org.universe.configuration.ServiceConfiguration
 import org.universe.model.ProfileId
@@ -11,9 +9,7 @@ import org.universe.model.ProfileId
  * @property client Cache client.
  * @property prefixKey Prefix key to identify the data in cache.
  */
-internal class ProfileIdCache : KoinComponent {
-
-    private val client: CacheClient by inject()
+internal class ProfileIdCache(val client: CacheClient) {
 
     private val prefixKey get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ProfileIdConfiguration.prefixKey]
 

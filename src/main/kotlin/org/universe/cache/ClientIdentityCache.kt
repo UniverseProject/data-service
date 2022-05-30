@@ -1,7 +1,8 @@
 package org.universe.cache
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.serializer
 import org.universe.configuration.CacheConfiguration
 import org.universe.configuration.ServiceConfiguration
 import org.universe.database.dao.ClientIdentity
@@ -16,9 +17,7 @@ import java.util.*
  * @property cacheByUUID `true` if the data should be stored by the [uuid][ClientIdentity.uuid].
  * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
  */
-internal class ClientIdentityCache : KoinComponent {
-
-    private val client: CacheClient by inject()
+internal class ClientIdentityCache(val client: CacheClient) {
 
     private val prefixKey get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.prefixKey]
 
@@ -39,7 +38,7 @@ internal class ClientIdentityCache : KoinComponent {
         }
 
         return client.connect {
-            val key = getKey(uuid)
+            val key = getKey(uuid.toString())
             val nameSerial = it.get(key) ?: return null
             ClientIdentity(uuid, nameSerial.decodeToString())
         }
@@ -60,7 +59,7 @@ internal class ClientIdentityCache : KoinComponent {
         return client.connect {
             val key = getKey(name)
             val uuidSerial = it.get(key) ?: return null
-            val uuid = decodeFromByteArrayToUUID(uuidSerial)
+            val uuid = decodeFromByteArray(UUIDSerializer, uuidSerial)
             ClientIdentity(uuid, name)
         }
     }
@@ -76,45 +75,38 @@ internal class ClientIdentityCache : KoinComponent {
     suspend fun save(identity: ClientIdentity) {
         if (cacheByUUID) {
             client.connect {
-                val key = getKey(identity.uuid)
-                val data = identity.name.encodeToByteArray()
+                val key = getKey(identity.uuid.toString())
+                val data = encodeToByteArray(String.serializer(), identity.name)
                 it.set(key, data)
             }
         } else if (cacheByName) {
             client.connect {
                 val key = getKey(identity.name)
-                val data = encodeToByteArray(identity.uuid)
+                val data = encodeToByteArray(UUIDSerializer, identity.uuid)
                 it.set(key, data)
             }
         }
     }
 
     /**
-     * Create the key from the [uuid][ClientIdentity.uuid] to identify data in cache.
-     * @param uuid Id of a client.
-     * @return [ByteArray] corresponding to the key using the [prefixKey] and [uuid].
-     */
-    private fun getKey(uuid: UUID): ByteArray = prefixKey.encodeToByteArray() + encodeToByteArray(uuid)
-
-    /**
      * Create the key from a [String] value to identify data in cache.
      * @param value Value using to create key.
      * @return [ByteArray] corresponding to the key using the [prefixKey] and [value].
      */
-    private fun getKey(value: String): ByteArray = "$prefixKey$value".encodeToByteArray()
+    private fun getKey(value: String): ByteArray = client.binaryFormat.encodeToByteArray(String.serializer(), "$prefixKey$value")
 
     /**
-     * Transform a [UUID] to a [ByteArray] by encoding data using [binaryFormat][CacheClient.binaryFormat].
-     * @param uuid UUID.
-     * @return Result of the serialization of [uuid].
+     * Transform an instance to a [ByteArray] by encoding data using [binaryFormat][CacheClient.binaryFormat].
+     * @param value Value that will be serialized.
+     * @return Result of the serialization of [value].
      */
-    private fun encodeToByteArray(uuid: UUID): ByteArray = client.binaryFormat.encodeToByteArray(UUIDSerializer, uuid)
+    private fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray = client.binaryFormat.encodeToByteArray(serializer, value)
 
     /***
-     * Transform a [ByteArray] to a [UUID] by decoding data using [binaryFormat][CacheClient.binaryFormat].
-     * @param uuidSerial Serialization of a [UUID] value.
-     * @return The [UUID] value from the [uuidSerial] decoded.
+     * Transform a [ByteArray] to a value by decoding data using [binaryFormat][CacheClient.binaryFormat].
+     * @param valueSerial Serialization of the value.
+     * @return The value from the [valueSerial] decoded.
      */
-    private fun decodeFromByteArrayToUUID(uuidSerial: ByteArray): UUID =
-        client.binaryFormat.decodeFromByteArray(UUIDSerializer, uuidSerial)
+    private fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, valueSerial: ByteArray): T =
+        client.binaryFormat.decodeFromByteArray(deserializer, valueSerial)
 }

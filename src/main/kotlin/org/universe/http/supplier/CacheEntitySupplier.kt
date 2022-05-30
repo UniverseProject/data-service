@@ -1,6 +1,7 @@
 package org.universe.http.supplier
 
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.universe.cache.CacheClient
 import org.universe.cache.ProfileIdCache
 import org.universe.cache.ProfileSkinCache
@@ -12,9 +13,11 @@ import org.universe.model.ProfileSkin
  */
 class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
-    private val profileSkinCache = ProfileSkinCache()
+    private val client: CacheClient by inject()
 
-    private val profileIdCache = ProfileIdCache()
+    private val profileSkinCache = ProfileSkinCache(client)
+
+    private val profileIdCache = ProfileIdCache(client)
 
     override suspend fun getId(name: String): ProfileId? = profileIdCache.getByName(name)
 
