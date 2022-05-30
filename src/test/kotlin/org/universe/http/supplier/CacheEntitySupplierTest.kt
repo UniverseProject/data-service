@@ -42,7 +42,7 @@ class CacheEntitySupplierTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
-        cacheClient.pool.close()
+        cacheClient.close()
     }
 
     interface CacheTest {

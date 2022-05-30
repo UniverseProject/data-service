@@ -50,7 +50,7 @@ class EntitySupplierCompanionTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
-        cacheClient.pool.close()
+        cacheClient.close()
     }
 
     @Test

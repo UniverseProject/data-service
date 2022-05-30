@@ -54,7 +54,7 @@ class StoreEntitySupplierTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
-        cacheClient.pool.close()
+        cacheClient.close()
     }
 
     abstract inner class StoreTest {

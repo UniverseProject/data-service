@@ -18,7 +18,16 @@ import org.universe.configuration.ServiceConfiguration
  * @property client Redis client.
  * @property pool Pool of connection from [client].
  */
-class CacheClient(private val client: RedisClient, val binaryFormat: BinaryFormat = DEFAULT_BINARY_FORMAT) {
+class CacheClient(
+    private val client: RedisClient,
+    val binaryFormat: BinaryFormat = DEFAULT_BINARY_FORMAT,
+    poolConfiguration: GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>> =
+        GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>>().apply {
+            minIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.minIdle]
+            maxIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxIdle]
+            maxTotal = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxTotal]
+        }
+) : AutoCloseable {
 
     companion object {
         /**
@@ -33,11 +42,7 @@ class CacheClient(private val client: RedisClient, val binaryFormat: BinaryForma
     val pool: GenericObjectPool<StatefulRedisConnection<ByteArray, ByteArray>> =
         ConnectionPoolSupport.createGenericObjectPool(
             { client.connect(ByteArrayCodec.INSTANCE) },
-            GenericObjectPoolConfig<StatefulRedisConnection<ByteArray, ByteArray>>().apply {
-                minIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.minIdle]
-                maxIdle = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxIdle]
-                maxTotal = ServiceConfiguration.cacheConfiguration[CacheConfiguration.PoolConfiguration.maxTotal]
-            }
+            poolConfiguration
         )
 
     /**
@@ -50,5 +55,9 @@ class CacheClient(private val client: RedisClient, val binaryFormat: BinaryForma
         return pool.borrowObject().use {
             body(it.coroutines())
         }
+    }
+
+    override fun close() {
+        pool.close()
     }
 }
