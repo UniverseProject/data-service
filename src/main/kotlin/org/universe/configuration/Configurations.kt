@@ -31,7 +31,7 @@ internal object CacheConfiguration : ConfigSpec("cache") {
     /**
      * Configuration for cache for [ProfileId] data.
      */
-    internal object ProfileIdConfiguration : ConfigSpec("profId") {
+    internal object ProfileIdConfiguration : ConfigSpec("profilId") {
         val prefixKey by optional("profId:", description = "Prefix to register a data in cache")
     }
 }
