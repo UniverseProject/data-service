@@ -90,20 +90,26 @@ dependencies {
     implementation("com.uchuhimo:konf:$konfVersion")
 }
 
+kotlin {
+    sourceSets {
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlin.contracts.ExperimentalContracts")
+                optIn("kotlin.ExperimentalStdlibApi")
+                optIn("kotlin.time.ExperimentalTime")
+            }
+        }
+    }
+}
+
 tasks {
     test {
         useJUnitPlatform()
     }
 
-    compileKotlin {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
-
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-Xopt-in=kotlin.RequiresOptIn",
-            "-Xopt-in=kotlin.contracts.ExperimentalContracts",
-            "-Xopt-in=kotlin.ExperimentalStdlibApi",
-            "-Xopt-in=kotlin.time.ExperimentalTime"
-        )
     }
 
     build {
