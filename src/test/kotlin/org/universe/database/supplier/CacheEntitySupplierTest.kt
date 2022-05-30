@@ -34,6 +34,7 @@ class CacheEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
+        ServiceConfiguration.reloadConfigurations()
         cacheClient = CacheClient(RedisURI.create(redisContainer.url))
         startKoin {
             modules(
@@ -44,7 +45,6 @@ class CacheEntitySupplierTest : KoinTest {
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
-        ServiceConfiguration.reloadConfigurations()
     }
 
     @AfterTest

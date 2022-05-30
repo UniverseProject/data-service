@@ -39,6 +39,7 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() {
+        ServiceConfiguration.reloadConfigurations()
         cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
@@ -51,7 +52,6 @@ class StoreEntitySupplierTest : KoinTest {
         storeEntitySupplier = StoreEntitySupplier(mockSupplier)
         // Use to verify if data is inserted
         cacheEntitySupplier = CacheEntitySupplier()
-        ServiceConfiguration.reloadConfigurations()
     }
 
     @AfterTest

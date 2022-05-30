@@ -39,9 +39,9 @@ internal object CacheConfiguration : ConfigSpec("cache") {
 /**
  * Allows loading and refresh the configuration of the services.
  */
-object ServiceConfiguration {
+internal object ServiceConfiguration {
 
-    internal var cacheConfiguration: Config = loadCacheConfiguration()
+    var cacheConfiguration: Config = loadCacheConfiguration()
         private set
 
     /**

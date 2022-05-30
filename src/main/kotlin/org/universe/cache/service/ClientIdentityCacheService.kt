@@ -1,10 +1,7 @@
-package org.universe.cache
+package org.universe.cache.service
 
-import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.serializer
-import org.universe.configuration.CacheConfiguration
-import org.universe.configuration.ServiceConfiguration
+import org.universe.cache.CacheClient
 import org.universe.database.dao.ClientIdentity
 import org.universe.serializer.UUIDSerializer
 import java.util.*
@@ -17,13 +14,12 @@ import java.util.*
  * @property cacheByUUID `true` if the data should be stored by the [uuid][ClientIdentity.uuid].
  * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
  */
-internal class ClientIdentityCache(val client: CacheClient) {
-
-    private val prefixKey get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.prefixKey]
-
-    private val cacheByUUID get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.useUUID]
-
-    private val cacheByName get() = ServiceConfiguration.cacheConfiguration[CacheConfiguration.ClientIdentityConfiguration.useName]
+internal class ClientIdentityCacheService(
+    client: CacheClient,
+    prefixKey: String,
+    private val cacheByUUID: Boolean,
+    private val cacheByName: Boolean
+): CacheService(client, prefixKey) {
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].
@@ -87,27 +83,4 @@ internal class ClientIdentityCache(val client: CacheClient) {
             }
         }
     }
-
-    /**
-     * Create the key from a [String] value to identify data in cache.
-     * @param value Value using to create key.
-     * @return [ByteArray] corresponding to the key using the [prefixKey] and [value].
-     */
-    private fun getKey(value: String): ByteArray = encodeToByteArray(String.serializer(), "$prefixKey$value")
-
-    /**
-     * Transform an instance to a [ByteArray] by encoding data using [binaryFormat][CacheClient.binaryFormat].
-     * @param value Value that will be serialized.
-     * @return Result of the serialization of [value].
-     */
-    private fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray =
-        client.binaryFormat.encodeToByteArray(serializer, value)
-
-    /***
-     * Transform a [ByteArray] to a value by decoding data using [binaryFormat][CacheClient.binaryFormat].
-     * @param valueSerial Serialization of the value.
-     * @return The value from the [valueSerial] decoded.
-     */
-    private fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, valueSerial: ByteArray): T =
-        client.binaryFormat.decodeFromByteArray(deserializer, valueSerial)
 }
