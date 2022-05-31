@@ -155,7 +155,7 @@ class ClientIdentityCacheServiceTest : KoinTest {
             setService(cacheByUUID = false, cacheByName = true)
             saveWithKeyAlreadyExists(
                 { it.name },
-                { copy(name = it) },
+                { createIdentity().apply { name = it } },
                 { service.getByName(it) }
             )
         }

@@ -167,7 +167,7 @@ class CacheEntitySupplierTest : KoinTest {
         fun `save identity but name already exists`() = runBlocking {
             saveWithKeyAlreadyExists(
                 { it.name },
-                { copy(name = it) },
+                { createIdentity().apply { name = it } },
                 { cacheEntitySupplier.getIdentityByName(it) }
             )
         }

@@ -1,7 +1,6 @@
 package org.universe.database.supplier
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -50,42 +49,40 @@ class DatabaseEntitySupplierTest : KoinTest {
         stopKoin()
     }
 
-    abstract inner class DatabaseTest {
+    @Nested
+    @DisplayName("Get identity")
+    inner class GetIdentity {
 
         @Test
-        fun `data is not into the database`() = runBlocking {
-            val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(createIdentity())
-            assertNull(getIdentity(databaseEntitySupplier, id))
+        fun `data is not into the cache with uuid key`() = runBlocking {
+            dataNotInCache { databaseEntitySupplier.getIdentityByUUID(it.uuid) }
         }
 
         @Test
-        fun `data is retrieved from the database`() = runBlocking {
+        fun `data is not into the cache with name key`() = runBlocking {
+            dataNotInCache { databaseEntitySupplier.getIdentityByName(it.name) }
+        }
+
+        private suspend inline fun dataNotInCache(getter: (ClientIdentity) -> ClientIdentity?) {
             val id = createIdentity()
             databaseEntitySupplier.saveIdentity(id)
-            assertEquals(id, getIdentity(databaseEntitySupplier, id))
+            assertNull(getter(createIdentity()))
         }
 
-        abstract suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity?
-
-    }
-
-    @Nested
-    @DisplayName("Get identity by uuid")
-    inner class GetIdentityByUUID : DatabaseTest() {
-
-        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
-            return supplier.getIdentityByUUID(id.uuid)
+        @Test
+        fun `data is retrieved from the cache with uuid key`() = runBlocking {
+            dataPresentsInCache { databaseEntitySupplier.getIdentityByUUID(it.uuid)!! }
         }
 
-    }
+        @Test
+        fun `data is retrieved from the cache with name key`() = runBlocking {
+            dataPresentsInCache { databaseEntitySupplier.getIdentityByName(it.name)!! }
+        }
 
-    @Nested
-    @DisplayName("Get identity by name")
-    inner class GetIdentityByName : DatabaseTest() {
-
-        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
-            return supplier.getIdentityByName(id.name)
+        private suspend inline fun dataPresentsInCache(getter: (ClientIdentity) -> ClientIdentity) {
+            val id = createIdentity()
+            databaseEntitySupplier.saveIdentity(id)
+            assertEquals(id, getter(id))
         }
 
     }
@@ -95,26 +92,66 @@ class DatabaseEntitySupplierTest : KoinTest {
     inner class SaveIdentity {
 
         @Test
-        fun `save identity with uuid not exists`(): Unit = runBlocking {
+        fun `save identity with uuid not exists`() = runBlocking {
+            saveWithKeyNotExists(
+                { it.uuid },
+                { databaseEntitySupplier.getIdentityByUUID(it) }
+            )
+        }
+
+        @Test
+        fun `save identity with name not exists`() = runBlocking {
+            saveWithKeyNotExists(
+                { it.name },
+                { databaseEntitySupplier.getIdentityByName(it) }
+            )
+        }
+
+        private suspend inline fun <T> saveWithKeyNotExists(
+            getKey: (ClientIdentity) -> T,
+            getId: (T) -> ClientIdentity?
+        ) {
             val id = createIdentity()
-            databaseEntitySupplier.saveIdentity(createIdentity())
+            val key = getKey(id)
+            assertNull(getId(key))
             databaseEntitySupplier.saveIdentity(id)
+            assertEquals(id, getId(key))
         }
 
         @Test
         fun `save identity but uuid already exists`() {
             val id = createIdentity()
-            val idSaved = createIdentity().apply { uuid = id.uuid }
+            val uuid = id.uuid
+
             runBlocking {
-                databaseEntitySupplier.saveIdentity(idSaved)
+            assertNull(databaseEntitySupplier.getIdentityByUUID(uuid))
+            databaseEntitySupplier.saveIdentity(id)
+            assertEquals(id, databaseEntitySupplier.getIdentityByUUID(uuid))
             }
 
-            assertThrows<ExposedSQLException> {
-                // We need to divide the context of the coroutine because the exception extends to the whole coroutine.
+            val id2 = createIdentity().apply { this.uuid = uuid }
+            assertThrows<Exception> {
                 runBlocking {
-                    databaseEntitySupplier.saveIdentity(id)
+                    databaseEntitySupplier.saveIdentity(id2)
                 }
             }
+        }
+
+        @Test
+        fun `save identity but name already exists`() = runBlocking {
+            val id = createIdentity()
+            val name = id.name
+
+            assertNull(databaseEntitySupplier.getIdentityByName(name))
+            databaseEntitySupplier.saveIdentity(id)
+            assertEquals(id, databaseEntitySupplier.getIdentityByName(name))
+
+            val id2 = createIdentity().apply { this.name = name }
+            databaseEntitySupplier.saveIdentity(id2)
+            /**
+             * Multiple instance with the same name,
+             */
+            assertNull(databaseEntitySupplier.getIdentityByName(name))
         }
 
     }
