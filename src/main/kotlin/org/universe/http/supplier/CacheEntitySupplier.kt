@@ -1,10 +1,10 @@
 package org.universe.http.supplier
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.universe.cache.CacheClient
 import org.universe.cache.service.ProfileIdCacheService
+import org.universe.cache.service.ProfileIdCacheServiceImpl
 import org.universe.cache.service.ProfileSkinCacheService
+import org.universe.cache.service.ProfileSkinCacheServiceImpl
 import org.universe.extension.getPropertyOrEnv
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
@@ -12,19 +12,14 @@ import org.universe.model.ProfileSkin
 /**
  * [EntitySupplier] that uses a [CacheClient] to resolve entities.
  */
-class CacheEntitySupplier : EntitySupplier, KoinComponent {
-
-    private val client: CacheClient by inject()
-
-    private val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheService(
-        client,
+class CacheEntitySupplier(
+    private val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
         getPropertyOrEnv("cache.skin.prefix") ?: "skin:"
-    )
-
-    private val profileIdCache: ProfileIdCacheService = ProfileIdCacheService(
-        client,
+    ),
+    private val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
         getPropertyOrEnv("cache.profilId.prefix") ?: "skin:"
     )
+) : EntitySupplier {
 
     override suspend fun getId(name: String): ProfileId? = profileIdCache.getByName(name)
 

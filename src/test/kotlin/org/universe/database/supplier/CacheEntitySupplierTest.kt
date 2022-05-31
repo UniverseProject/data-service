@@ -1,214 +1,103 @@
 package org.universe.database.supplier
 
-import io.lettuce.core.RedisURI
+import io.mockk.coEvery
+import io.mockk.coJustRun
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.builtins.serializer
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junitpioneer.jupiter.SetSystemProperty
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.cache.CacheClient
-import org.universe.container.createRedisContainer
+import org.universe.cache.service.ClientIdentityCacheService
+import org.universe.cache.service.ClientIdentityCacheServiceImpl
 import org.universe.database.client.createIdentity
-import org.universe.database.dao.ClientIdentity
 import kotlin.test.*
 
-@Testcontainers
 class CacheEntitySupplierTest : KoinTest {
-
-    companion object {
-        @JvmStatic
-        @Container
-        private val redisContainer = createRedisContainer()
-    }
 
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
-    private lateinit var cacheClient: CacheClient
+    private lateinit var cacheService: ClientIdentityCacheService
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = CacheClient {
-            uri = RedisURI.create(redisContainer.url)
-        }
-
-        startKoin {
-            modules(
-                module {
-                    single {
-                        cacheClient
-                    }
-                })
-        }
-        cacheEntitySupplier = CacheEntitySupplier()
-    }
-
-    @AfterTest
-    fun onAfter() {
-        stopKoin()
-        cacheClient.close()
+        cacheService = mockk()
+        cacheEntitySupplier = CacheEntitySupplier(cacheService)
     }
 
     @Nested
-    @DisplayName("Get identity")
-    inner class GetIdentity {
+    inner class DefaultParameter : KoinTest {
 
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        @Test
-        fun `data is not into the cache with uuid key`() = runBlocking {
-            dataNotInCache { cacheEntitySupplier.getIdentityByUUID(it.uuid) }
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @Test
-        fun `data is not into the cache with name key`() = runBlocking {
-            dataNotInCache { cacheEntitySupplier.getIdentityByName(it.name) }
-        }
-
-        private suspend inline fun dataNotInCache(getter: (ClientIdentity) -> ClientIdentity?) {
-            val id = createIdentity()
-            cacheEntitySupplier.saveIdentity(id)
-            assertNull(getter(createIdentity()))
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        @Test
-        fun `data is retrieved from the cache with uuid key`() = runBlocking {
-            dataPresentsInCache { cacheEntitySupplier.getIdentityByUUID(it.uuid)!! }
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @Test
-        fun `data is retrieved from the cache with name key`() = runBlocking {
-            dataPresentsInCache { cacheEntitySupplier.getIdentityByName(it.name)!! }
-        }
-
-        private suspend inline fun dataPresentsInCache(getter: (ClientIdentity) -> ClientIdentity) {
-            val id = createIdentity()
-            cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, getter(id))
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "c:")
-        @Test
-        fun `data is retrieved from the cache with name key but serial value is not valid`() = runBlocking {
-            val prefixKey = "c:"
-            val id = createIdentity()
-            val key = id.name
-            cacheClient.connect {
-                val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), prefixKey + key)
-                it.set(keySerial, "test".encodeToByteArray())
+        @BeforeTest
+        fun onBefore() {
+            startKoin {
+                modules(
+                    module {
+                        single {
+                            mockk<CacheClient>()
+                        }
+                    })
             }
-            assertNull(cacheEntitySupplier.getIdentityByName(key))
+        }
+
+        @AfterTest
+        fun onAfter() {
+            stopKoin()
+        }
+
+        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "test:")
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
+        @Test
+        fun `default implementation use environment variable`() {
+            val supplier = CacheEntitySupplier()
+            val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
+            assertEquals("test:", service.prefixKey)
+            assertFalse { service.cacheByUUID }
+            assertTrue { service.cacheByName }
+        }
+
+        @Test
+        fun `default values`() {
+            val supplier = CacheEntitySupplier()
+            val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
+            assertTrue { service.cacheByUUID }
+            assertFalse { service.cacheByName }
         }
 
     }
 
-    @Nested
-    @DisplayName("Save identity")
-    inner class SaveIdentity {
+    @Test
+    fun `get identity by uuid use the mock method`() = runBlocking {
+        val id = createIdentity()
+        val uuid = id.uuid
+        coEvery { cacheService.getByUUID(uuid) } returns id
 
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        @Test
-        fun `save identity with uuid not exists`() = runBlocking {
-            saveWithKeyNotExists(
-                { it.uuid },
-                { cacheEntitySupplier.getIdentityByUUID(it) }
-            )
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @Test
-        fun `save identity with name not exists`() = runBlocking {
-            saveWithKeyNotExists(
-                { it.name },
-                { cacheEntitySupplier.getIdentityByName(it) }
-            )
-        }
-
-        private suspend inline fun <T> saveWithKeyNotExists(
-            getKey: (ClientIdentity) -> T,
-            getId: (T) -> ClientIdentity?
-        ) {
-            val id = createIdentity()
-            val key = getKey(id)
-            assertNull(getId(key))
-            cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, getId(key))
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        @Test
-        fun `save identity but uuid already exists`() = runBlocking {
-            saveWithKeyAlreadyExists(
-                { it.uuid },
-                { createIdentity().apply { uuid = it } },
-                { cacheEntitySupplier.getIdentityByUUID(it) }
-            )
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @Test
-        fun `save identity but name already exists`() = runBlocking {
-            saveWithKeyAlreadyExists(
-                { it.name },
-                { createIdentity().apply { name = it } },
-                { cacheEntitySupplier.getIdentityByName(it) }
-            )
-        }
-
-        private suspend inline fun <T> saveWithKeyAlreadyExists(
-            getKey: (ClientIdentity) -> T,
-            createId: ClientIdentity.(T) -> ClientIdentity,
-            getId: (T) -> ClientIdentity?
-        ) {
-            val id = createIdentity()
-            val key = getKey(id)
-
-            assertNull(getId(key))
-            cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, getId(key))
-
-            val id2 = id.createId(key)
-            cacheEntitySupplier.saveIdentity(id2)
-            assertEquals(id2, getId(key))
-        }
-
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "c:")
-        @Test
-        fun `data is saved using the binary format from client`(): Unit = runBlocking {
-            val prefixKey = "c:"
-            val id = createIdentity()
-            val key = id.uuid
-            cacheEntitySupplier.saveIdentity(id)
-
-            val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), prefixKey + key)
-
-            val value = cacheClient.connect {
-                it.get(keySerial)
-            }!!
-
-            val expectedName = id.name
-            assertEquals(expectedName, cacheClient.binaryFormat.decodeFromByteArray(String.serializer(), value))
-            assertNotEquals(expectedName, value.decodeToString())
-        }
-
+        assertEquals(id, cacheEntitySupplier.getIdentityByUUID(uuid))
+        coVerify(exactly = 1) { cacheService.getByUUID(uuid) }
     }
+
+    @Test
+    fun `get identity by name use the mock method`() = runBlocking {
+        val id = createIdentity()
+        val name = id.name
+        coEvery { cacheService.getByName(name) } returns id
+
+        assertEquals(id, cacheEntitySupplier.getIdentityByName(name))
+        coVerify(exactly = 1) { cacheService.getByName(name) }
+    }
+
+    @Test
+    fun `save identity by name use the mock method`() = runBlocking {
+        val id = createIdentity()
+        coJustRun { cacheService.save(id) }
+
+        cacheEntitySupplier.saveIdentity(id)
+        coVerify(exactly = 1) { cacheService.save(id) }
+    }
+
 }

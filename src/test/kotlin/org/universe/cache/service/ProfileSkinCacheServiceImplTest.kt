@@ -5,6 +5,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -16,7 +19,7 @@ import org.universe.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
-class ProfileSkinCacheServiceTest : KoinTest {
+class ProfileSkinCacheServiceImplTest : KoinTest {
 
     companion object {
         @JvmStatic
@@ -24,21 +27,29 @@ class ProfileSkinCacheServiceTest : KoinTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var service: ProfileSkinCacheService
+    private lateinit var service: ProfileSkinCacheServiceImpl
 
     private lateinit var cacheClient: CacheClient
 
     @BeforeTest
-    fun onBefore() = runBlocking {
+    fun onBefore() = runBlocking<Unit> {
         cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
-        service = ProfileSkinCacheService(cacheClient, getRandomString())
+        service = ProfileSkinCacheServiceImpl(getRandomString())
+
+        startKoin {
+            modules(
+                module {
+                    single { cacheClient }
+                })
+        }
     }
 
     @AfterTest
     fun onAfter() {
         cacheClient.close()
+        stopKoin()
     }
 
     @Nested
