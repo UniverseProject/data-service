@@ -13,30 +13,30 @@ class SystemExtTest {
 
     @Nested
     @DisplayName("Get env or property variable")
-    inner class GetEnvOrProperty {
+    inner class GetPropertyOrEnv {
 
         @Test
         fun `key not found`() {
-            assertNull(getEnvOrProperty(getRandomString()))
+            assertNull(getPropertyOrEnv(getRandomString()))
         }
 
         @Test
         @SetEnvironmentVariable(key = "testEnv", value = "testValueEnv")
         fun `key found from environnement`() {
-            assertEquals("testValueEnv", getEnvOrProperty("testEnv"))
+            assertEquals("testValueEnv", getPropertyOrEnv("testEnv"))
         }
 
         @Test
         @SetSystemProperty(key = "testProperty", value = "testValueProperty")
         fun `key found from properties`() {
-            assertEquals("testValueProperty", getEnvOrProperty("testProperty"))
+            assertEquals("testValueProperty", getPropertyOrEnv("testProperty"))
         }
 
         @Test
         @SetEnvironmentVariable(key = "test", value = "testValueEnv")
         @SetSystemProperty(key = "test", value = "testValueProperty")
         fun `key found from properties before env`() {
-            assertEquals("testValueProperty", getEnvOrProperty("test"))
+            assertEquals("testValueProperty", getPropertyOrEnv("test"))
         }
     }
 }

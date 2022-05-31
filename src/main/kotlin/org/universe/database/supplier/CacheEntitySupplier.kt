@@ -5,7 +5,7 @@ import org.koin.core.component.inject
 import org.universe.cache.CacheClient
 import org.universe.cache.service.ClientIdentityCacheService
 import org.universe.database.dao.ClientIdentity
-import org.universe.extension.getEnvOrProperty
+import org.universe.extension.getPropertyOrEnv
 import java.util.*
 
 /**
@@ -17,9 +17,9 @@ class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
     private val clientIdentityCache: ClientIdentityCacheService = ClientIdentityCacheService(
         client,
-        prefixKey = getEnvOrProperty("cache.clientId.prefix") ?: "cliId:",
-        cacheByUUID = (getEnvOrProperty("cache.clientId.useUUID") ?: true.toString()).toBooleanStrict(),
-        cacheByName = (getEnvOrProperty("cache.clientId.useName") ?: true.toString()).toBooleanStrict()
+        prefixKey = getPropertyOrEnv("cache.clientId.prefix") ?: "cliId:",
+        cacheByUUID = (getPropertyOrEnv("cache.clientId.useUUID") ?: true.toString()).toBooleanStrict(),
+        cacheByName = (getPropertyOrEnv("cache.clientId.useName") ?: true.toString()).toBooleanStrict()
     )
 
     override suspend fun getIdentityByUUID(uuid: UUID): ClientIdentity? = clientIdentityCache.getByUUID(uuid)
