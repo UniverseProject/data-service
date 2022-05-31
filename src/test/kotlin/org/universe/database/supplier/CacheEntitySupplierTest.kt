@@ -2,6 +2,7 @@ package org.universe.database.supplier
 
 import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junitpioneer.jupiter.SetSystemProperty
@@ -15,7 +16,6 @@ import org.universe.cache.CacheClient
 import org.universe.container.createRedisContainer
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
-import java.util.*
 import kotlin.test.*
 
 @Testcontainers
@@ -54,46 +54,63 @@ class CacheEntitySupplierTest : KoinTest {
         cacheClient.close()
     }
 
-    abstract inner class CacheTest {
+    @Nested
+    @DisplayName("Get identity")
+    inner class GetIdentity {
 
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
         @Test
-        fun `data is not into the cache`() = runBlocking {
+        fun `data is not into the cache with uuid key`() = runBlocking {
+            dataNotInCache { cacheEntitySupplier.getIdentityByUUID(it.uuid) }
+        }
+
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
+        @Test
+        fun `data is not into the cache with name key`() = runBlocking {
+            dataNotInCache { cacheEntitySupplier.getIdentityByName(it.name) }
+        }
+
+        private suspend inline fun dataNotInCache(getter: (ClientIdentity) -> ClientIdentity?) {
             val id = createIdentity()
             cacheEntitySupplier.saveIdentity(id)
-            assertNull(getIdentity(cacheEntitySupplier, createIdentity()))
+            assertNull(getter(createIdentity()))
         }
 
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
         @Test
-        fun `data is retrieved from the cache`() = runBlocking {
+        fun `data is retrieved from the cache with uuid key`() = runBlocking {
+            dataPresentsInCache { cacheEntitySupplier.getIdentityByUUID(it.uuid)!! }
+        }
+
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
+        @Test
+        fun `data is retrieved from the cache with name key`() = runBlocking {
+            dataPresentsInCache { cacheEntitySupplier.getIdentityByName(it.name)!! }
+        }
+
+        private suspend inline fun dataPresentsInCache(getter: (ClientIdentity) -> ClientIdentity) {
             val id = createIdentity()
             cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, getIdentity(cacheEntitySupplier, id))
+            assertEquals(id, getter(id))
         }
 
-        abstract suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity?
-
-    }
-
-    @Nested
-    @DisplayName("Get identity by uuid")
-    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-    inner class GetIdentityByUUID : CacheTest() {
-
-        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
-            return supplier.getIdentityByUUID(id.uuid)
-        }
-
-    }
-
-    @Nested
-    @DisplayName("Get identity by name")
-    @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-    @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-    inner class GetIdentityByName : CacheTest() {
-
-        override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
-            return supplier.getIdentityByName(id.name)
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
+        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "c:")
+        @Test
+        fun `data is retrieved from the cache with name key but serial value is not valid`() = runBlocking {
+            val prefixKey = "c:"
+            val id = createIdentity()
+            val key = id.name
+            cacheClient.connect {
+                val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), prefixKey + key)
+                it.set(keySerial, "test".encodeToByteArray())
+            }
+            assertNull(cacheEntitySupplier.getIdentityByName(key))
         }
 
     }
@@ -102,48 +119,95 @@ class CacheEntitySupplierTest : KoinTest {
     @DisplayName("Save identity")
     inner class SaveIdentity {
 
-        @Test
         @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
         @SetSystemProperty(key = "cache.clientId.useName", value = "false")
+        @Test
         fun `save identity with uuid not exists`() = runBlocking {
-            val id = createIdentity()
-            val uuid = id.uuid
-            assertNull(cacheEntitySupplier.getIdentityByUUID(uuid))
-            cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(uuid))
+            saveWithKeyNotExists(
+                { it.uuid },
+                { cacheEntitySupplier.getIdentityByUUID(it) }
+            )
         }
 
-        @Test
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
-        fun `save identity but uuid already exists`() = runBlocking {
-            val id = createIdentity()
-            val idKey = id.uuid
-
-            assertNull(cacheEntitySupplier.getIdentityByUUID(idKey))
-            cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, cacheEntitySupplier.getIdentityByUUID(idKey))
-
-            val id2 = createIdentity().apply { this.uuid = idKey }
-            cacheEntitySupplier.saveIdentity(id2)
-            assertEquals(id2, cacheEntitySupplier.getIdentityByUUID(idKey))
-        }
-
-        @Test
         @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
         @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        fun `save identity but name already exists`() = runBlocking {
+        @Test
+        fun `save identity with name not exists`() = runBlocking {
+            saveWithKeyNotExists(
+                { it.name },
+                { cacheEntitySupplier.getIdentityByName(it) }
+            )
+        }
+
+        private suspend inline fun <T> saveWithKeyNotExists(
+            getKey: (ClientIdentity) -> T,
+            getId: (T) -> ClientIdentity?
+        ) {
             val id = createIdentity()
-            val idKey = id.name
-
-            assertNull(cacheEntitySupplier.getIdentityByName(idKey))
+            val key = getKey(id)
+            assertNull(getId(key))
             cacheEntitySupplier.saveIdentity(id)
-            assertEquals(id, cacheEntitySupplier.getIdentityByName(id.name))
+            assertEquals(id, getId(key))
+        }
 
-            val id2 = id.copy(uuid = UUID.randomUUID())
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
+        @Test
+        fun `save identity but uuid already exists`() = runBlocking {
+            saveWithKeyAlreadyExists(
+                { it.uuid },
+                { createIdentity().apply { uuid = it } },
+                { cacheEntitySupplier.getIdentityByUUID(it) }
+            )
+        }
+
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
+        @Test
+        fun `save identity but name already exists`() = runBlocking {
+            saveWithKeyAlreadyExists(
+                { it.name },
+                { copy(name = it) },
+                { cacheEntitySupplier.getIdentityByName(it) }
+            )
+        }
+
+        private suspend inline fun <T> saveWithKeyAlreadyExists(
+            getKey: (ClientIdentity) -> T,
+            createId: ClientIdentity.(T) -> ClientIdentity,
+            getId: (T) -> ClientIdentity?
+        ) {
+            val id = createIdentity()
+            val key = getKey(id)
+
+            assertNull(getId(key))
+            cacheEntitySupplier.saveIdentity(id)
+            assertEquals(id, getId(key))
+
+            val id2 = id.createId(key)
             cacheEntitySupplier.saveIdentity(id2)
+            assertEquals(id2, getId(key))
+        }
 
-            assertEquals(id2, cacheEntitySupplier.getIdentityByName(id2.name))
+        @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
+        @SetSystemProperty(key = "cache.clientId.useName", value = "false")
+        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "c:")
+        @Test
+        fun `data is saved using the binary format from client`(): Unit = runBlocking {
+            val prefixKey = "c:"
+            val id = createIdentity()
+            val key = id.uuid
+            cacheEntitySupplier.saveIdentity(id)
+
+            val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), prefixKey + key)
+
+            val value = cacheClient.connect {
+                it.get(keySerial)
+            }!!
+
+            val expectedName = id.name
+            assertEquals(expectedName, cacheClient.binaryFormat.decodeFromByteArray(String.serializer(), value))
+            assertNotEquals(expectedName, value.decodeToString())
         }
 
     }

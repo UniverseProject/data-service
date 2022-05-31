@@ -17,7 +17,7 @@ class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
     private val clientIdentityCache: ClientIdentityCacheService = ClientIdentityCacheService(
         client,
-        prefixKey = getPropertyOrEnv("cache.clientId.prefix") ?: "cliId:",
+        prefixKey = getPropertyOrEnv("cache.clientId.prefixKey") ?: "cliId:",
         cacheByUUID = (getPropertyOrEnv("cache.clientId.useUUID") ?: true.toString()).toBooleanStrict(),
         cacheByName = (getPropertyOrEnv("cache.clientId.useName") ?: true.toString()).toBooleanStrict()
     )
