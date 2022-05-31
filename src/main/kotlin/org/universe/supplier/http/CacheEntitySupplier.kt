@@ -9,10 +9,10 @@ import org.universe.extension.getPropertyOrEnv
  */
 class CacheEntitySupplier(
     private val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
-        getPropertyOrEnv("cache.skin.prefix") ?: "skin:"
+        getPropertyOrEnv("cache.skin.prefixKey") ?: "skin:"
     ),
     private val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
-        getPropertyOrEnv("cache.profilId.prefix") ?: "skin:"
+        getPropertyOrEnv("cache.profilId.prefixKey") ?: "profId:"
     )
 ) : EntitySupplier {
 
