@@ -14,7 +14,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.cache.CacheClient
 import org.universe.container.createRedisContainer
-import org.universe.database.supplier.CacheEntitySupplierTest
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
 import kotlin.test.*
@@ -37,7 +36,7 @@ class StoreEntitySupplierTest : KoinTest {
     @BeforeTest
     fun onBefore() = runBlocking {
         cacheClient = CacheClient {
-            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+            uri = RedisURI.create(redisContainer.url)
         }
 
         startKoin {

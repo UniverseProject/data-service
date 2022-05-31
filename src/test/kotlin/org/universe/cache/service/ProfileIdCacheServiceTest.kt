@@ -29,7 +29,7 @@ class ProfileIdCacheServiceTest : KoinTest {
     @BeforeTest
     fun onBefore() = runBlocking {
         cacheClient = CacheClient {
-            uri = RedisURI.create(ClientIdentityCacheServiceTest.redisContainer.url)
+            uri = RedisURI.create(redisContainer.url)
         }
         service = ProfileIdCacheService(cacheClient, getRandomString())
     }

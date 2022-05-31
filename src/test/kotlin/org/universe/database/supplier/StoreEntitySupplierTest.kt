@@ -39,7 +39,7 @@ class StoreEntitySupplierTest : KoinTest {
     @BeforeTest
     fun onBefore() = runBlocking {
         cacheClient = CacheClient {
-            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+            uri = RedisURI.create(redisContainer.url)
         }
 
         startKoin {

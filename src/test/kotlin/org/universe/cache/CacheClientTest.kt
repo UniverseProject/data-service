@@ -10,7 +10,6 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.universe.cache.service.ClientIdentityCacheServiceTest
 import org.universe.container.createRedisContainer
 import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
@@ -30,7 +29,7 @@ class CacheClientTest {
     @Test
     fun `pool is used to get connection from client`() = runBlocking {
         val client = CacheClient {
-            uri = RedisURI.create(ClientIdentityCacheServiceTest.redisContainer.url)
+            uri = RedisURI.create(redisContainer.url)
         }
         val pool = client.pool
 

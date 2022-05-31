@@ -42,7 +42,7 @@ class EntitySupplierCompanionTest : KoinTest {
     @BeforeTest
     fun onBefore() = runBlocking {
         cacheClient = CacheClient {
-            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+            uri = RedisURI.create(redisContainer.url)
         }
         Database.connect(
             url = psqlContainer.jdbcUrl,
