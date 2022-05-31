@@ -25,7 +25,7 @@ class DatabaseEntitySupplierTest : KoinTest {
     companion object {
         @JvmStatic
         @Container
-        val psqlContainer = createPSQLContainer()
+        private val psqlContainer = createPSQLContainer()
     }
 
     private lateinit var databaseEntitySupplier: DatabaseEntitySupplier

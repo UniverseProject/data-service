@@ -23,7 +23,7 @@ class CacheClientTest {
     companion object {
         @JvmStatic
         @Container
-        val redisContainer = createRedisContainer()
+        private val redisContainer = createRedisContainer()
     }
 
     @Test

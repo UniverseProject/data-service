@@ -27,11 +27,11 @@ class EntitySupplierCompanionTest : KoinTest {
     companion object {
         @JvmStatic
         @Container
-        val psqlContainer = createPSQLContainer()
+        private val psqlContainer = createPSQLContainer()
 
         @JvmStatic
         @Container
-        val redisContainer = createRedisContainer()
+        private val redisContainer = createRedisContainer()
     }
 
     private lateinit var cacheClient: CacheClient

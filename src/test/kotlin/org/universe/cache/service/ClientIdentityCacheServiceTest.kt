@@ -20,7 +20,7 @@ class ClientIdentityCacheServiceTest : KoinTest {
     companion object {
         @JvmStatic
         @Container
-        val redisContainer = createRedisContainer()
+        private val redisContainer = createRedisContainer()
     }
 
     private lateinit var service: ClientIdentityCacheService
