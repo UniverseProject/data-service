@@ -27,6 +27,10 @@ abstract class CacheService(val client: CacheClient, val prefixKey: String) {
      * @param valueSerial Serialization of the value.
      * @return The value from the [valueSerial] decoded.
      */
-    protected fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, valueSerial: ByteArray): T =
-        client.binaryFormat.decodeFromByteArray(deserializer, valueSerial)
+    protected fun <T> decodeFromByteArrayOrNull(deserializer: DeserializationStrategy<T>, valueSerial: ByteArray): T? =
+        try {
+            client.binaryFormat.decodeFromByteArray(deserializer, valueSerial)
+        } catch (_: Exception) {
+            null
+        }
 }

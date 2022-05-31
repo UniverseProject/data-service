@@ -19,7 +19,7 @@ internal class ClientIdentityCacheService(
     prefixKey: String,
     private val cacheByUUID: Boolean,
     private val cacheByName: Boolean
-): CacheService(client, prefixKey) {
+) : CacheService(client, prefixKey) {
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].
@@ -36,7 +36,8 @@ internal class ClientIdentityCacheService(
         return client.connect {
             val key = getKey(uuid.toString())
             val nameSerial = it.get(key) ?: return null
-            ClientIdentity(uuid, decodeFromByteArray(String.serializer(), nameSerial))
+            val name = decodeFromByteArrayOrNull(String.serializer(), nameSerial) ?: return null
+            ClientIdentity(uuid, name)
         }
     }
 
@@ -55,7 +56,7 @@ internal class ClientIdentityCacheService(
         return client.connect {
             val key = getKey(name)
             val uuidSerial = it.get(key) ?: return null
-            val uuid = decodeFromByteArray(UUIDSerializer, uuidSerial)
+            val uuid = decodeFromByteArrayOrNull(UUIDSerializer, uuidSerial) ?: return null
             ClientIdentity(uuid, name)
         }
     }

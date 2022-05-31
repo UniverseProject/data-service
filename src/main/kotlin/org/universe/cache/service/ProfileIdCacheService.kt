@@ -12,7 +12,7 @@ import org.universe.model.ProfileId
 internal class ProfileIdCacheService(
     client: CacheClient,
     prefixKey: String
-): CacheService(client, prefixKey) {
+) : CacheService(client, prefixKey) {
 
     /**
      * Get the instance of [ProfileId] linked to the [name] data.
@@ -23,7 +23,7 @@ internal class ProfileIdCacheService(
         return client.connect {
             val key = getKey(name)
             val dataSerial = it.get(key) ?: return null
-            val uuid = decodeFromByteArray(String.serializer(), dataSerial)
+            val uuid = decodeFromByteArrayOrNull(String.serializer(), dataSerial) ?: return null
             ProfileId(id = uuid, name = name)
         }
     }

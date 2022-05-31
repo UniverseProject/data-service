@@ -2,6 +2,7 @@ package org.universe.cache.service
 
 import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.koin.test.KoinTest
@@ -92,6 +93,18 @@ class ClientIdentityCacheServiceTest : KoinTest {
             assertEquals(id, getter(id))
         }
 
+        @Test
+        fun `data is retrieved from the cache with name key but serial value is not valid`() = runBlocking {
+            setService(cacheByUUID = false, cacheByName = true)
+            val id = createIdentity()
+            val key = id.name
+            cacheClient.connect {
+                val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), service.prefixKey + key)
+                it.set(keySerial, "test".encodeToByteArray())
+            }
+            assertNull(service.getByName(key))
+        }
+
     }
 
     @Nested
@@ -162,6 +175,24 @@ class ClientIdentityCacheServiceTest : KoinTest {
             val id2 = id.createId(key)
             service.save(id2)
             assertEquals(id2, getId(key))
+        }
+
+        @Test
+        fun `data is saved using the binary format from client`(): Unit = runBlocking {
+            setService(cacheByUUID = true, cacheByName = false)
+            val id = createIdentity()
+            val key = id.uuid
+            service.save(id)
+
+            val keySerial = cacheClient.binaryFormat.encodeToByteArray(String.serializer(), service.prefixKey + key)
+
+            val value = cacheClient.connect {
+                it.get(keySerial)
+            }!!
+
+            val expectedName = id.name
+            assertEquals(expectedName, cacheClient.binaryFormat.decodeFromByteArray(String.serializer(), value))
+            assertNotEquals(expectedName, value.decodeToString())
         }
 
     }

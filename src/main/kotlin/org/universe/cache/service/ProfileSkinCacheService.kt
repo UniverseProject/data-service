@@ -11,7 +11,7 @@ import org.universe.model.ProfileSkin
 internal class ProfileSkinCacheService(
     client: CacheClient,
     prefixKey: String
-): CacheService(client, prefixKey) {
+) : CacheService(client, prefixKey) {
 
     /**
      * Get the instance of [ProfileSkin] linked to the [uuid] data.
@@ -22,7 +22,7 @@ internal class ProfileSkinCacheService(
         return client.connect {
             val key = getKey(uuid)
             val dataSerial = it.get(key) ?: return null
-            decodeFromByteArray(ProfileSkin.serializer(), dataSerial)
+            decodeFromByteArrayOrNull(ProfileSkin.serializer(), dataSerial)
         }
     }
 
