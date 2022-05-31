@@ -1,95 +1,96 @@
 package org.universe.http.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.api.put
-import dev.kord.cache.map.MapDataCache
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
+import org.universe.cache.CacheClient
+import org.universe.cache.service.ClientIdentityCacheServiceImpl
+import org.universe.cache.service.ProfileIdCacheService
+import org.universe.cache.service.ProfileSkinCacheService
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
 import org.universe.utils.getRandomString
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-class CacheEntitySupplierTest : KoinTest {
-
-    private val cache: DataCache by inject()
-    private lateinit var cacheEntitySupplier: CacheEntitySupplier
-
-    @BeforeTest
-    fun onBefore() {
-        startKoin {
-            modules(
-                module {
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ProfileId::name))
-                        mapCache.register(description(ProfileSkin::id))
-                    }
-
-                    single { mapCache }
-                })
-        }
-        cacheEntitySupplier = CacheEntitySupplier()
-    }
-
-    @AfterTest
-    fun onAfter() {
-        stopKoin()
-    }
-
-    interface CacheTest {
-        fun `data is not into the cache`()
-        fun `data is retrieved from the cache`()
-    }
+class CacheEntitySupplierTest {
 
     @Nested
-    @DisplayName("Get player uuid")
-    inner class GetId : CacheTest {
+    inner class DefaultParameter : KoinTest {
 
-        @Test
-        override fun `data is not into the cache`() = runBlocking {
-            val id = createProfileId()
-            cache.put(id)
-            assertNull(cacheEntitySupplier.getId(getRandomString()))
+        @BeforeTest
+        fun onBefore() {
+            startKoin {
+                modules(
+                    module {
+                        single {
+                            mockk<CacheClient>()
+                        }
+                    })
+            }
+        }
+
+        @AfterTest
+        fun onAfter() {
+            stopKoin()
         }
 
         @Test
-        override fun `data is retrieved from the cache`() = runBlocking {
-            val id = createProfileId()
-            cache.put(id)
-            assertEquals(id, cacheEntitySupplier.getId(id.name))
+        fun `default implementation use environment variable`() {
+            fun setPropertyAndCheckInstance(
+                prefixKey: String,
+                useUUID: Boolean,
+                useName: Boolean
+            ) {
+                System.setProperty("cache.clientId.prefixKey", prefixKey)
+                System.setProperty("cache.clientId.useUUID", "$useUUID")
+                System.setProperty("cache.clientId.useName", "$useName")
+                val supplier = org.universe.database.supplier.CacheEntitySupplier()
+                val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
+                assertEquals(prefixKey, service.prefixKey)
+                assertEquals(useUUID, service.cacheByUUID)
+                assertEquals(useName, service.cacheByName)
+            }
+
+            setPropertyAndCheckInstance(getRandomString(), useUUID = true, useName = false)
+            setPropertyAndCheckInstance(getRandomString(), useUUID = false, useName = true)
+            setPropertyAndCheckInstance(getRandomString(), useUUID = true, useName = true)
+            setPropertyAndCheckInstance(getRandomString(), useUUID = false, useName = false)
         }
+
     }
 
-    @Nested
-    @DisplayName("Get skin by id")
-    inner class GetSkin: CacheTest {
+    @Test
+    fun `get skin use the mock method`() = runBlocking {
+        val cacheService = mockk<ProfileSkinCacheService>()
+        val supplier = CacheEntitySupplier(cacheService, mockk())
 
-        @Test
-        override fun `data is not into the cache`() = runBlocking {
-            val skin = createProfileSkin()
-            cache.put(skin)
-            assertNull(cacheEntitySupplier.getSkin(getRandomString()))
-        }
+        val profile = createProfileSkin()
+        val uuid = profile.id
+        coEvery { cacheService.getByUUID(uuid) } returns profile
 
-        @Test
-        override fun `data is retrieved from the cache`() = runBlocking {
-            val skin = createProfileSkin()
-            cache.put(skin)
-            assertEquals(skin, cacheEntitySupplier.getSkin(skin.id))
-        }
+        assertEquals(profile, supplier.getSkin(uuid))
+        coVerify(exactly = 1) { cacheService.getByUUID(uuid) }
+    }
+
+    @Test
+    fun `get id use the mock method`() = runBlocking {
+        val cacheService = mockk<ProfileIdCacheService>()
+        val supplier = CacheEntitySupplier(mockk(), cacheService)
+
+        val profile = createProfileId()
+        val name = profile.name
+        coEvery { cacheService.getByName(name) } returns profile
+
+        assertEquals(profile, supplier.getId(name))
+        coVerify(exactly = 1) { cacheService.getByName(name) }
     }
 }

@@ -7,7 +7,7 @@ import java.util.*
 /**
  * Service to retrieve data about clients.
  */
-interface ClientIdentityService : Strategizable {
+interface ClientIdentityService: Strategizable {
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].

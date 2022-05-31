@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.universe.database.dao.ClientIdentity
-import org.universe.database.dao.MAX_PSEUDO_LENGTH
+import org.universe.database.dao.MAX_NAME_LENGTH
 import org.universe.database.supplier.EntitySupplier
 import org.universe.utils.getRandomString
 import java.util.*
@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 fun createIdentity(): ClientIdentity {
-    return ClientIdentity(uuid = UUID.randomUUID(), name = getRandomString().take(MAX_PSEUDO_LENGTH))
+    return ClientIdentity(uuid = UUID.randomUUID(), name = getRandomString().take(MAX_NAME_LENGTH))
 }
 
 class ClientIdentityServiceImplTest {

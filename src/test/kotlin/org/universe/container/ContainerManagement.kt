@@ -1,4 +1,4 @@
-package org.universe.database
+package org.universe.container
 
 import org.testcontainers.containers.PostgreSQLContainer
 
@@ -6,3 +6,5 @@ fun createPSQLContainer(): PostgreSQLContainer<*> = PostgreSQLContainer("postgre
     .withDatabaseName("db")
     .withUsername("test")
     .withPassword("test")
+
+fun createRedisContainer(): RedisContainer<*> = RedisContainer("redis:7.0.0")

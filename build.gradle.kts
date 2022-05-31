@@ -17,6 +17,7 @@ repositories {
 }
 
 val kotlinVersion: String by project
+val kotlinCoroutineReactiveVersion: String by project
 val koinVersion: String by project
 val ktorVersion: String by project
 val ktSerializationVersion: String by project
@@ -26,13 +27,19 @@ val loggingVersion: String by project
 val slf4jVersion: String by project
 val mockkVersion: String by project
 val junitVersion: String by project
+val junitPioneerVersion: String by project
 val testContainersVersion: String by project
 val psqlVersion: String by project
+val konfVersion: String by project
+val lettuceVersion: String by project
+val apachePoolVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test-junit5"))
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutineReactiveVersion")
+
 
     // Koin for inject instance
     implementation("io.insert-koin:koin-core:$koinVersion")
@@ -53,6 +60,7 @@ dependencies {
 
     // Kotlin Serialization to serialize data for database and cache
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$ktSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$ktSerializationVersion")
 
     // Exposed to interact with the SQL database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -60,10 +68,9 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.postgresql:postgresql:$psqlVersion")
 
-    // Cache with map (for local without real service) or redis
-    implementation("dev.kord.cache:cache-api:$cacheVersion")
-    implementation("dev.kord.cache:cache-map:$cacheVersion")
-    implementation("dev.kord.cache:cache-redis:$cacheVersion")
+    // Redis cache
+    implementation("io.lettuce:lettuce-core:$lettuceVersion")
+    implementation("org.apache.commons:commons-pool2:$apachePoolVersion")
 
     // Logging information
     implementation("io.github.microutils:kotlin-logging:$loggingVersion")
@@ -76,8 +83,20 @@ dependencies {
     // Junit to run tests
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testImplementation("org.junit-pioneer:junit-pioneer:$junitPioneerVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
+}
+
+kotlin {
+    sourceSets {
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlin.ExperimentalStdlibApi")
+            }
+        }
+    }
 }
 
 tasks {
@@ -85,15 +104,8 @@ tasks {
         useJUnitPlatform()
     }
 
-    compileKotlin {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
-
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-Xopt-in=kotlin.RequiresOptIn",
-            "-Xopt-in=kotlin.contracts.ExperimentalContracts",
-            "-Xopt-in=kotlin.ExperimentalStdlibApi",
-            "-Xopt-in=kotlin.time.ExperimentalTime"
-        )
     }
 
     build {

@@ -1,9 +1,6 @@
 package org.universe.http.supplier
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
-import dev.kord.cache.api.put
-import dev.kord.cache.map.MapDataCache
+import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -16,37 +13,40 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.cache.CacheClient
+import org.universe.container.createRedisContainer
 import org.universe.http.mojang.MojangAPI
-import org.universe.model.ProfileId
-import org.universe.model.ProfileSkin
 import org.universe.utils.createProfileId
 import org.universe.utils.getRandomString
 import kotlin.test.*
 
+@Testcontainers
 class EntitySupplierCompanionTest : KoinTest {
 
+    companion object {
+        @JvmStatic
+        @Container
+        private val redisContainer = createRedisContainer()
+    }
+
+    private lateinit var cacheClient: CacheClient
+
     private val mojangAPI: MojangAPI by inject()
-    private val cache: DataCache by inject()
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
-    fun onBefore() {
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            uri = RedisURI.create(redisContainer.url)
+        }
+
         startKoin {
             modules(
                 module {
                     single { mockk<MojangAPI>(getRandomString()) } bind MojangAPI::class
-
-                    val mapCache: DataCache = MapDataCache {
-                        forType<ProfileId> { concurrentHashMap() }
-                        forType<ProfileSkin> { concurrentHashMap() }
-                    }
-
-                    runBlocking {
-                        mapCache.register(description(ProfileId::name))
-                        mapCache.register(description(ProfileSkin::id))
-                    }
-
-                    single { mapCache }
+                    single { cacheClient }
                 })
         }
         cacheEntitySupplier = CacheEntitySupplier()
@@ -55,6 +55,7 @@ class EntitySupplierCompanionTest : KoinTest {
     @AfterTest
     fun onAfter() {
         stopKoin()
+        cacheClient.close()
     }
 
     @Test
@@ -92,7 +93,7 @@ class EntitySupplierCompanionTest : KoinTest {
         fun `data present in cache is not used to find value`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            cache.put(profileId)
+            cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
             assertEquals(profileId, supplier.getId(name))
@@ -125,7 +126,7 @@ class EntitySupplierCompanionTest : KoinTest {
         fun `data present in cache is use to avoid rest call`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            cache.put(profileId)
+            cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
             assertEquals(profileId, supplier.getId(name))
@@ -158,7 +159,7 @@ class EntitySupplierCompanionTest : KoinTest {
         fun `data present in cache is use to avoid rest call`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            cache.put(profileId)
+            cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
             assertEquals(profileId, supplier.getId(name))
