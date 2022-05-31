@@ -6,6 +6,7 @@ import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.codec.ByteArrayCodec
+import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.support.AsyncConnectionPoolSupport
 import io.lettuce.core.support.BoundedAsyncPool
 import io.lettuce.core.support.BoundedPoolConfig
@@ -17,33 +18,79 @@ import kotlinx.serialization.protobuf.ProtoBuf
  * Wrapper of [RedisClient] using pool to manage connection.
  * @property uri URI to connect the client.
  * @property client Redis client.
+ * @property keyPrefix Prefix used before all keys to insert and retrieve data.
  * @property binaryFormat Object to encode and decode information.
  * @property pool Pool of connection from [client].
  */
 class CacheClient(
     val uri: RedisURI,
-    val client: RedisClient = RedisClient.create(),
-    val binaryFormat: BinaryFormat = DEFAULT_BINARY_FORMAT,
-    poolConfiguration: BoundedPoolConfig = BoundedPoolConfig.builder()
-        .maxTotal(-1)
-        .build()
+    val client: RedisClient,
+    val keyPrefix: String,
+    val binaryFormat: BinaryFormat,
+    val pool: BoundedAsyncPool<StatefulRedisConnection<ByteArray, ByteArray>>
 ) : AutoCloseable {
 
     companion object {
-        /**
-         * [ProtoBuf] is used to transform data to [ByteArray] and vice-versa.
-         * [ByteArray] type is used to maximize the compatibility with all data type.
-         */
-        val DEFAULT_BINARY_FORMAT = ProtoBuf {
-            encodeDefaults = false
-        }
+        suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient = Builder().apply(builder).build()
     }
 
-    val pool: BoundedAsyncPool<StatefulRedisConnection<ByteArray, ByteArray>> =
-        AsyncConnectionPoolSupport.createBoundedObjectPool(
-            { client.connectAsync(ByteArrayCodec.INSTANCE, uri) },
-            poolConfiguration
-        )
+    object Default {
+        /**
+         * @see [CacheClient.binaryFormat].
+         */
+        val binaryFormat = ProtoBuf {
+            encodeDefaults = false
+        }
+
+        /**
+         * Codec to encode/decode keys and values.
+         */
+        val codec: ByteArrayCodec get() = ByteArrayCodec.INSTANCE
+
+        /**
+         * @see [CacheClient.keyPrefix].
+         */
+        val keyPrefix: String get() = ""
+    }
+
+    /**
+     * Builder class to simplify the creation of [CacheClient].
+     * @property uri @see [CacheClient.uri].
+     * @property client @see [CacheClient.client].
+     * @property keyPrefix @see [CacheClient.keyPrefix].
+     * @property binaryFormat @see [CacheClient.binaryFormat].
+     * @property codec @see Codec to encode/decode keys and values.
+     * @property poolConfiguration Configuration to create the pool of connections to interact with cache.
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    class Builder {
+        lateinit var uri: RedisURI
+        var client: RedisClient? = null
+        var keyPrefix: String = Default.keyPrefix
+        var binaryFormat: BinaryFormat = Default.binaryFormat
+        var codec: RedisCodec<ByteArray, ByteArray> = Default.codec
+        var poolConfiguration: BoundedPoolConfig? = null
+
+        /**
+         * Build the instance of [CacheClient] with the values defined in builder.
+         * @return A new instance.
+         */
+        suspend fun build(): CacheClient {
+            val redisClient = client ?: RedisClient.create()
+            val codec = this.codec
+
+            return CacheClient(
+                uri = uri,
+                client = redisClient,
+                keyPrefix = keyPrefix,
+                binaryFormat = binaryFormat,
+                pool = AsyncConnectionPoolSupport.createBoundedObjectPoolAsync(
+                    { redisClient.connectAsync(codec, uri) },
+                    poolConfiguration ?: BoundedPoolConfig.builder().maxTotal(-1).build()
+                ).await()
+            )
+        }
+    }
 
     /**
      * Use a connection from the [pool] to interact with the cache.

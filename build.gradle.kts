@@ -86,8 +86,6 @@ dependencies {
     testImplementation("org.junit-pioneer:junit-pioneer:$junitPioneerVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
-
-    implementation("com.uchuhimo:konf:$konfVersion")
 }
 
 kotlin {

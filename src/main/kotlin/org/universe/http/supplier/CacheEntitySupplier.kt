@@ -5,8 +5,6 @@ import org.koin.core.component.inject
 import org.universe.cache.CacheClient
 import org.universe.cache.service.ProfileIdCacheService
 import org.universe.cache.service.ProfileSkinCacheService
-import org.universe.configuration.CacheConfiguration
-import org.universe.configuration.ServiceConfiguration
 import org.universe.model.ProfileId
 import org.universe.model.ProfileSkin
 
@@ -17,9 +15,9 @@ class CacheEntitySupplier : EntitySupplier, KoinComponent {
 
     private val client: CacheClient by inject()
 
-    private val profileSkinCache = ProfileSkinCacheService(client, ServiceConfiguration.cacheConfiguration[CacheConfiguration.ProfileSkinConfiguration.prefixKey])
+    private val profileSkinCache = ProfileSkinCacheService(client, "skin:")
 
-    private val profileIdCache = ProfileIdCacheService(client, ServiceConfiguration.cacheConfiguration[CacheConfiguration.ProfileIdConfiguration.prefixKey])
+    private val profileIdCache = ProfileIdCacheService(client, "profId:")
 
     override suspend fun getId(name: String): ProfileId? = profileIdCache.getByName(name)
 

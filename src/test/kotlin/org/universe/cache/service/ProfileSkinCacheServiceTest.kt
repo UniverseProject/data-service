@@ -27,8 +27,10 @@ class ProfileSkinCacheServiceTest : KoinTest {
     private lateinit var cacheClient: CacheClient
 
     @BeforeTest
-    fun onBefore() {
-        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            uri = RedisURI.create(ClientIdentityCacheServiceTest.redisContainer.url)
+        }
         service = ProfileSkinCacheService(cacheClient, getRandomString())
     }
 

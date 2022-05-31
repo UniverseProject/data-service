@@ -28,8 +28,10 @@ class ClientIdentityCacheServiceTest : KoinTest {
     private lateinit var cacheClient: CacheClient
 
     @BeforeTest
-    fun onBefore() {
-        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            uri = RedisURI.create(redisContainer.url)
+        }
     }
 
     private fun setService(

@@ -16,7 +16,6 @@ import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.cache.CacheClient
-import org.universe.configuration.ServiceConfiguration
 import org.universe.container.createRedisContainer
 import org.universe.database.client.createIdentity
 import org.universe.database.dao.ClientIdentity
@@ -38,9 +37,10 @@ class StoreEntitySupplierTest : KoinTest {
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
-    fun onBefore() {
-        ServiceConfiguration.reloadConfigurations()
-        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+        }
 
         startKoin {
             modules(

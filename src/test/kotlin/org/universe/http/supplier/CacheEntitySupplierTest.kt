@@ -12,6 +12,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.universe.cache.CacheClient
 import org.universe.container.createRedisContainer
+import org.universe.database.supplier.CacheEntitySupplierTest
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
 import org.universe.utils.getRandomString
@@ -30,8 +31,10 @@ class CacheEntitySupplierTest : KoinTest {
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
-    fun onBefore() {
-        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+        }
 
         startKoin {
             modules(

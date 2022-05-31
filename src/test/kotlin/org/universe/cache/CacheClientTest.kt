@@ -10,6 +10,7 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.cache.service.ClientIdentityCacheServiceTest
 import org.universe.container.createRedisContainer
 import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
@@ -28,7 +29,9 @@ class CacheClientTest {
 
     @Test
     fun `pool is used to get connection from client`() = runBlocking {
-        val client = CacheClient(RedisURI.create(redisContainer.url))
+        val client = CacheClient {
+            uri = RedisURI.create(ClientIdentityCacheServiceTest.redisContainer.url)
+        }
         val pool = client.pool
 
         assertEquals(0, pool.objectCount)
@@ -56,10 +59,13 @@ class CacheClientTest {
     }
 
     @Test
-    fun `close instance will stop the client`() {
+    fun `close instance will stop the client`() = runBlocking {
         val redisClient = mockk<RedisClient>()
         justRun { redisClient.shutdown() }
-        val client = CacheClient(RedisURI.create(redisContainer.url), client = redisClient)
+        val client = CacheClient {
+            uri = RedisURI.create(redisContainer.url)
+            client = redisClient
+        }
 
         client.close()
 
@@ -72,7 +78,10 @@ class CacheClientTest {
     fun `close async instance will stop the client`() = runBlocking {
         val redisClient = mockk<RedisClient>()
         every { redisClient.shutdownAsync() } returns CompletableFuture.completedFuture(mockk())
-        val client = CacheClient(RedisURI.create(redisContainer.url), client = redisClient)
+        val client = CacheClient {
+            uri = RedisURI.create(redisContainer.url)
+            client = redisClient
+        }
 
         client.closeAsync()
 
@@ -82,14 +91,17 @@ class CacheClientTest {
     }
 
     @Test
-    fun `pool configuration is used to create pool`() {
+    fun `pool configuration is used to create pool`() = runBlocking {
         val poolConfig = BoundedPoolConfig.builder()
             .maxIdle(Random.nextInt(0, 100))
             .minIdle(Random.nextInt(-100, 0))
             .maxTotal(Random.nextInt(1000, 2000))
             .build()
 
-        val client = CacheClient(RedisURI.create(redisContainer.url), poolConfiguration = poolConfig)
+        val client = CacheClient {
+            uri = RedisURI.create(redisContainer.url)
+            poolConfiguration = poolConfig
+        }
 
         val pool = client.pool
         assertEquals(poolConfig.maxIdle, pool.maxIdle)

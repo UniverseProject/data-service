@@ -40,7 +40,10 @@ class EntitySupplierCompanionTest : KoinTest {
     private lateinit var databaseSupplier: EntitySupplier
 
     @BeforeTest
-    fun onBefore() {
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
+            RedisURI.create(CacheEntitySupplierTest.redisContainer.url)
+        }
         Database.connect(
             url = psqlContainer.jdbcUrl,
             driver = Driver::class.java.name,
@@ -50,8 +53,6 @@ class EntitySupplierCompanionTest : KoinTest {
         transaction {
             SchemaUtils.create(ClientIdentities)
         }
-
-        cacheClient = CacheClient(RedisURI.create(redisContainer.url))
 
         startKoin {
             modules(
