@@ -61,8 +61,7 @@ cacheClient.connect {
 
 ### Service
 
-Several services are available to interact with the database or the cache. They are
-located [here](src/main/kotlin/org/universe/data).
+Several services are available to interact with the database or the cache.
 
 The default implementation of cache services retrieve
 the [Cache client](src/main/kotlin/org/universe/cache/CacheClient.kt) using the injection
