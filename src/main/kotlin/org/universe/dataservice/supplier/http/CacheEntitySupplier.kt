@@ -8,11 +8,11 @@ import org.universe.dataservice.cache.CacheService
  * [EntitySupplier] that uses [CacheService] to resolve entities.
  */
 class CacheEntitySupplier(
-    private val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
-        getPropertyOrEnv("cache.skin.prefix") ?: "skin:"
+    val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
+        getPropertyOrEnv("cache.skin.prefixKey") ?: "skin:"
     ),
-    private val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
-        getPropertyOrEnv("cache.profilId.prefix") ?: "skin:"
+    val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
+        getPropertyOrEnv("cache.profilId.prefixKey") ?: "profId:"
     )
 ) : EntitySupplier {
 

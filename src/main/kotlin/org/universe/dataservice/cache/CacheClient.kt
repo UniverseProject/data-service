@@ -18,21 +18,18 @@ import kotlinx.serialization.protobuf.ProtoBuf
  * Wrapper of [RedisClient] using pool to manage connection.
  * @property uri URI to connect the client.
  * @property client Redis client.
- * @property prefixKey Prefix used before all keys to insert and retrieve data.
  * @property binaryFormat Object to encode and decode information.
  * @property pool Pool of connection from [client].
  */
 class CacheClient(
     val uri: RedisURI,
     val client: RedisClient,
-    val prefixKey: String,
     val binaryFormat: BinaryFormat,
     val pool: BoundedAsyncPool<StatefulRedisConnection<ByteArray, ByteArray>>
 ) : AutoCloseable {
 
     companion object {
-        suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient = Builder()
-            .apply(builder).build()
+        suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient = Builder().apply(builder).build()
     }
 
     object Default {
@@ -47,18 +44,12 @@ class CacheClient(
          * Codec to encode/decode keys and values.
          */
         val codec: ByteArrayCodec get() = ByteArrayCodec.INSTANCE
-
-        /**
-         * @see [CacheClient.prefixKey].
-         */
-        val prefixKey: String get() = ""
     }
 
     /**
      * Builder class to simplify the creation of [CacheClient].
      * @property uri @see [CacheClient.uri].
      * @property client @see [CacheClient.client].
-     * @property prefixKey @see [CacheClient.prefixKey].
      * @property binaryFormat @see [CacheClient.binaryFormat].
      * @property codec @see Codec to encode/decode keys and values.
      * @property poolConfiguration Configuration to create the pool of connections to interact with cache.
@@ -67,9 +58,8 @@ class CacheClient(
     class Builder {
         lateinit var uri: RedisURI
         var client: RedisClient? = null
-        var prefixKey: String = CacheClient.Default.prefixKey
-        var binaryFormat: BinaryFormat = CacheClient.Default.binaryFormat
-        var codec: RedisCodec<ByteArray, ByteArray> = CacheClient.Default.codec
+        var binaryFormat: BinaryFormat = Default.binaryFormat
+        var codec: RedisCodec<ByteArray, ByteArray> = Default.codec
         var poolConfiguration: BoundedPoolConfig? = null
 
         /**
@@ -83,7 +73,6 @@ class CacheClient(
             return CacheClient(
                 uri = uri,
                 client = redisClient,
-                prefixKey = prefixKey,
                 binaryFormat = binaryFormat,
                 pool = AsyncConnectionPoolSupport.createBoundedObjectPoolAsync(
                     { redisClient.connectAsync(codec, uri) },

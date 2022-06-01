@@ -64,6 +64,7 @@ class CacheEntitySupplierTest : KoinTest {
         fun `default values`() {
             val supplier = CacheEntitySupplier()
             val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
+            assertEquals("cliId:", service.prefixKey)
             assertTrue { service.cacheByUUID }
             assertFalse { service.cacheByName }
         }
