@@ -114,7 +114,7 @@ You can use each type of supplier using the static variable from the
 [EntitySupplier database](src/main/kotlin/org/universe/supplier/database/EntitySupplier.kt) and 
 [EntitySupplier http](src/main/kotlin/org/universe/supplier/http/EntitySupplier.kt).
 
-Using an existing service, you can change the supplier
+Using a service, you can change the supplier
 
 ```kotlin
 // Use exclusively the database
