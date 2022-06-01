@@ -8,10 +8,10 @@ import org.universe.extension.getPropertyOrEnv
  * [EntitySupplier] that uses a [CacheClient] to resolve entities.
  */
 class CacheEntitySupplier(
-    private val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
+    val profileSkinCache: ProfileSkinCacheService = ProfileSkinCacheServiceImpl(
         getPropertyOrEnv("cache.skin.prefixKey") ?: "skin:"
     ),
-    private val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
+    val profileIdCache: ProfileIdCacheService = ProfileIdCacheServiceImpl(
         getPropertyOrEnv("cache.profilId.prefixKey") ?: "profId:"
     )
 ) : EntitySupplier {

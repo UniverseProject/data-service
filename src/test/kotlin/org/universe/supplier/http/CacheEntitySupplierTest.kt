@@ -1,96 +1,145 @@
 package org.universe.supplier.http
 
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
+import org.junitpioneer.jupiter.SetSystemProperty
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.universe.cache.CacheClient
-import org.universe.data.ClientIdentityCacheServiceImpl
 import org.universe.data.ProfileIdCacheService
+import org.universe.data.ProfileIdCacheServiceImpl
 import org.universe.data.ProfileSkinCacheService
+import org.universe.data.ProfileSkinCacheServiceImpl
 import org.universe.utils.createProfileId
 import org.universe.utils.createProfileSkin
-import org.universe.utils.getRandomString
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CacheEntitySupplierTest {
+class CacheEntitySupplierTest : KoinTest {
+
+    @BeforeTest
+    fun onBefore() {
+        startKoin {
+            modules(
+                module {
+                    single {
+                        mockk<CacheClient>()
+                    }
+                })
+        }
+    }
+
+    @AfterTest
+    fun onAfter() {
+        stopKoin()
+    }
 
     @Nested
-    inner class DefaultParameter : KoinTest {
+    inner class ProfileIdService {
 
-        @BeforeTest
-        fun onBefore() {
-            startKoin {
-                modules(
-                    module {
-                        single {
-                            mockk<CacheClient>()
-                        }
-                    })
+        @Nested
+        inner class DefaultParameter {
+
+            @SetSystemProperty(key = "cache.profilId.prefixKey", value = "test:")
+            @Test
+            fun `default implementation use environment variable`() {
+                val supplier = CacheEntitySupplier()
+                val service = supplier.profileIdCache as ProfileIdCacheServiceImpl
+                assertEquals("test:", service.prefixKey)
             }
-        }
 
-        @AfterTest
-        fun onAfter() {
-            stopKoin()
+            @Test
+            fun `default values`() {
+                val supplier = CacheEntitySupplier()
+                val service = supplier.profileIdCache as ProfileIdCacheServiceImpl
+                assertEquals("profId:", service.prefixKey)
+            }
+
         }
 
         @Test
-        fun `default implementation use environment variable`() {
-            fun setPropertyAndCheckInstance(
-                prefixKey: String,
-                useUUID: Boolean,
-                useName: Boolean
-            ) {
-                System.setProperty("cache.clientId.prefixKey", prefixKey)
-                System.setProperty("cache.clientId.useUUID", "$useUUID")
-                System.setProperty("cache.clientId.useName", "$useName")
-                val supplier = org.universe.supplier.database.CacheEntitySupplier()
-                val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
-                assertEquals(prefixKey, service.prefixKey)
-                assertEquals(useUUID, service.cacheByUUID)
-                assertEquals(useName, service.cacheByName)
-            }
+        fun `get id use the mock method`() = runBlocking {
+            val cacheService = mockk<ProfileIdCacheService>()
+            val supplier = CacheEntitySupplier(mockk(), cacheService)
 
-            setPropertyAndCheckInstance(getRandomString(), useUUID = true, useName = false)
-            setPropertyAndCheckInstance(getRandomString(), useUUID = false, useName = true)
-            setPropertyAndCheckInstance(getRandomString(), useUUID = true, useName = true)
-            setPropertyAndCheckInstance(getRandomString(), useUUID = false, useName = false)
+            val profile = createProfileId()
+            val name = profile.name
+            coEvery { cacheService.getByName(name) } returns profile
+
+            assertEquals(profile, supplier.getId(name))
+            coVerify(exactly = 1) { cacheService.getByName(name) }
+        }
+
+        @Test
+        fun `save id use the mock method`() = runBlocking {
+            val cacheService = mockk<ProfileIdCacheService>()
+            val supplier = CacheEntitySupplier(mockk(), cacheService)
+
+            val profile = createProfileId()
+            coJustRun { cacheService.save(profile) }
+
+            supplier.save(profile)
+            coVerify(exactly = 1) { cacheService.save(profile) }
         }
 
     }
 
-    @Test
-    fun `get skin use the mock method`() = runBlocking {
-        val cacheService = mockk<ProfileSkinCacheService>()
-        val supplier = CacheEntitySupplier(cacheService, mockk())
+    @Nested
+    inner class ProfileSkinService {
 
-        val profile = createProfileSkin()
-        val uuid = profile.id
-        coEvery { cacheService.getByUUID(uuid) } returns profile
+        @Nested
+        inner class DefaultParameter {
 
-        assertEquals(profile, supplier.getSkin(uuid))
-        coVerify(exactly = 1) { cacheService.getByUUID(uuid) }
+            @SetSystemProperty(key = "cache.skin.prefixKey", value = "test:")
+            @Test
+            fun `default implementation use environment variable`() {
+                val supplier = CacheEntitySupplier()
+                val service = supplier.profileSkinCache as ProfileSkinCacheServiceImpl
+                assertEquals("test:", service.prefixKey)
+            }
+
+            @Test
+            fun `default values`() {
+                val supplier = CacheEntitySupplier()
+                val service = supplier.profileSkinCache as ProfileSkinCacheServiceImpl
+                assertEquals("skin:", service.prefixKey)
+            }
+
+        }
+
+        @Test
+        fun `get skin use the mock method`() = runBlocking {
+            val cacheService = mockk<ProfileSkinCacheService>()
+            val supplier = CacheEntitySupplier(cacheService, mockk())
+
+            val profile = createProfileSkin()
+            val uuid = profile.id
+            coEvery { cacheService.getByUUID(uuid) } returns profile
+
+            assertEquals(profile, supplier.getSkin(uuid))
+            coVerify(exactly = 1) { cacheService.getByUUID(uuid) }
+        }
+
+        @Test
+        fun `save id use the mock method`() = runBlocking {
+            val cacheService = mockk<ProfileSkinCacheService>()
+            val supplier = CacheEntitySupplier(cacheService, mockk())
+
+            val profile = createProfileSkin()
+            coJustRun { cacheService.save(profile) }
+
+            supplier.save(profile)
+            coVerify(exactly = 1) { cacheService.save(profile) }
+        }
+
     }
 
-    @Test
-    fun `get id use the mock method`() = runBlocking {
-        val cacheService = mockk<ProfileIdCacheService>()
-        val supplier = CacheEntitySupplier(mockk(), cacheService)
-
-        val profile = createProfileId()
-        val name = profile.name
-        coEvery { cacheService.getByName(name) } returns profile
-
-        assertEquals(profile, supplier.getId(name))
-        coVerify(exactly = 1) { cacheService.getByName(name) }
-    }
 }
