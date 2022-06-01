@@ -28,14 +28,21 @@ The [Cache client](src/main/kotlin/org/universe/cache/CacheClient.kt) allows man
 cache automatically. You can create an instance like that :
 
 ```kotlin
-suspend fun createCacheClient() {
-    return CacheClient {
-        uri = RedisURI.create(redisContainer.url) // required
-        client = RedisClient.create() // optional
-        binaryFormat = ProtoBuf { } // optional
-        codec = ByteArrayCodec.INSTANCE // optional
-        poolConfiguration = BoundedPoolConfig.builder().maxTotal(-1).build() // optional
-    }
+import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
+import io.lettuce.core.codec.ByteArrayCodec
+import io.lettuce.core.support.BoundedPoolConfig
+import kotlinx.serialization.protobuf.ProtoBuf
+import org.universe.cache.CacheClient
+
+suspend fun createCacheClient(): CacheClient {
+  return CacheClient {
+    uri = RedisURI.create("my redis url") // required
+    client = RedisClient.create() // optional
+    binaryFormat = ProtoBuf { } // optional
+    codec = ByteArrayCodec.INSTANCE // optional
+    poolConfiguration = BoundedPoolConfig.builder().maxTotal(-1).build() // optional
+  }
 }
 ```
 
@@ -63,21 +70,28 @@ by [koin](https://github.com/InsertKoinIO/koin). So before use them, you need to
 in your application.
 
 ```kotlin
-suspend fun main() {
-    val cacheClient: CacheClient = createCacheClient()
-    startKoin {
-        modules(
-            module {
-                single { cacheClient }
-            }
-        )
-    }
+import org.koin.core.context.startKoin
+import org.koin.dsl.module
+import org.universe.cache.CacheClient
+import org.universe.data.ClientIdentityCacheService
+import org.universe.data.ClientIdentityCacheServiceImpl
+import java.util.*
 
-    val uuid = UUID.randomUUID()
-    val clientIdentifyCacheService: ClientIdentityCacheService =
-        ClientIdentityCacheServiceImpl(prefixKey = "c:", useUUID = true, useName = false)
-    val id = clientIdentifyCacheService.getByUUID(uuid)
-    println(id)
+suspend fun main() {
+  val cacheClient: CacheClient = createCacheClient()
+  startKoin {
+    modules(
+      module {
+        single { cacheClient }
+      }
+    )
+  }
+
+  val uuid = UUID.randomUUID()
+  val clientIdentifyCacheService: ClientIdentityCacheService =
+    ClientIdentityCacheServiceImpl(prefixKey = "c:", cacheByUUID = true, cacheByName = false)
+  val id = clientIdentifyCacheService.getByUUID(uuid)
+  println(id)
 }
 ```
 
