@@ -24,8 +24,8 @@ This library is not currently published in maven central (or other). But this co
 
 ### Cache
 
-The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and interaction with
-cache automatically. You can create an instance like that :
+The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and
+interaction with cache automatically. You can create an instance like that :
 
 ```kotlin
 import io.lettuce.core.RedisClient
@@ -36,13 +36,13 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.universe.dataservice.cache.CacheClient
 
 suspend fun createCacheClient(): CacheClient {
-  return CacheClient {
-    uri = RedisURI.create("my redis url") // required
-    client = RedisClient.create() // optional
-    binaryFormat = ProtoBuf { } // optional
-    codec = ByteArrayCodec.INSTANCE // optional
-    poolConfiguration = BoundedPoolConfig.builder().maxTotal(-1).build() // optional
-  }
+    return CacheClient {
+        uri = RedisURI.create("my redis url") // required
+        client = RedisClient.create() // optional
+        binaryFormat = ProtoBuf { } // optional
+        codec = ByteArrayCodec.INSTANCE // optional
+        poolConfiguration = BoundedPoolConfig.builder().maxTotal(-1).build() // optional
+    }
 }
 ```
 
@@ -74,7 +74,11 @@ import org.koin.dsl.module
 import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.data.ClientIdentityCacheService
 import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
+import org.universe.dataservice.data.ClientIdentityService
+import org.universe.dataservice.data.ClientIdentityServiceImpl
+import org.universe.dataservice.supplier.database.EntitySupplier
 import java.util.*
+
 
 suspend fun main() {
   val cacheClient: CacheClient = createCacheClient()
@@ -87,20 +91,24 @@ suspend fun main() {
   }
 
   val uuid = UUID.randomUUID()
-  val clientIdentifyCacheService: ClientIdentityCacheService =
+  // cache service
+  val clientIdentityCacheService: ClientIdentityCacheService =
     ClientIdentityCacheServiceImpl(prefixKey = "c:", cacheByUUID = true, cacheByName = false)
-  val id = clientIdentifyCacheService.getByUUID(uuid)
-  println(id)
+  println(clientIdentityCacheService.getByUUID(uuid))
+
+  // common service (database & cache) according to the supplier
+  val clientIdentityService: ClientIdentityService = ClientIdentityServiceImpl(EntitySupplier.cacheWithCachingDatabaseFallback)
+  println(clientIdentityService.getByUUID(uuid))
 }
 ```
 
 Here a list of service usable :
 
-| Service                                                                                           | Import                          |
-|---------------------------------------------------------------------------------------------------|---------------------------------|
-| [ClientIdentityCacheServiceImpl](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) | org.universe.dataservice.data.* |
-| [ProfileIdServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt)                | org.universe.dataservice.data.* |
-| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt)            | org.universe.dataservice.data.* |
+| Service                                                                                      | Import                          |
+|----------------------------------------------------------------------------------------------|---------------------------------|
+| [ClientIdentityServiceImpl](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) | org.universe.dataservice.data.* |
+| [ProfileIdServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt)           | org.universe.dataservice.data.* |
+| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt)       | org.universe.dataservice.data.* |
 
 ### Supplier
 
@@ -109,18 +117,18 @@ The suppliers allow defining behavior when you interact with a data.
 - [Supplier for database](src/main/kotlin/org/universe/dataservice/supplier/database)
 - [Supplier for http](src/main/kotlin/org/universe/dataservice/supplier/http)
 
-You can use each type of supplier using the static variable from the 
-[EntitySupplier database](src/main/kotlin/org/universe/dataservice/supplier/database/EntitySupplier.kt) and 
+You can use each type of supplier using the static variable from the
+[EntitySupplier database](src/main/kotlin/org/universe/dataservice/supplier/database/EntitySupplier.kt) and
 [EntitySupplier http](src/main/kotlin/org/universe/dataservice/supplier/http/EntitySupplier.kt).
 
 Using a service, you can change the supplier
 
 ```kotlin
 // Use exclusively the database
-clientIdentifyCacheService.withStrategy(EntitySupplier.database)
+clientIdentityService.withStrategy(EntitySupplier.database)
 
 // Use exclusively the database and cache the result
-clientIdentifyCacheService.withStrategy(EntitySupplier.cachingDatabase)
+clientIdentityService.withStrategy(EntitySupplier.cachingDatabase)
 
 // ...
 ```
@@ -141,7 +149,8 @@ The values are retrieved from the properties or the environment variables.
 
 ## Build
 
-To build the project, you need to use the gradle app in the application [gradlew.bat](gradlew.bat) for windows and [gradlew](gradlew) for linux).
+To build the project, you need to use the gradle app in the application [gradlew.bat](gradlew.bat) for windows
+and [gradlew](gradlew) for linux).
 `gradlew` is a wrapper to run gradle command without install it on our computer.
 
 ````shell
