@@ -50,6 +50,8 @@ cacheClient.connect {
 }
 ```
 
+**To manage the data in the cache, we recommend using the services**
+
 ### Service
 
 Several services are available to interact with the database or the cache. They are
@@ -78,6 +80,14 @@ suspend fun main() {
     println(id)
 }
 ```
+
+Here a list of service usable :
+
+| Service                                                                               | Import               |
+|---------------------------------------------------------------------------------------|----------------------|
+| [ClientIdentityCacheServiceImpl](src/main/kotlin/org/universe/data/ClientIdentity.kt) | org.universe.data.*  |
+| [ProfileIdServiceImpl](src/main/kotlin/org/universe/data/ProfileId.kt)                | org.universe.data.*  |
+| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/data/ProfileSkin.kt)            | org.universe.data.*  |
 
 ### Supplier
 
