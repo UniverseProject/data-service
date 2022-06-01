@@ -24,7 +24,7 @@ This library is not currently published in maven central (or other). But this co
 
 ### Cache
 
-The [Cache client](src/main/kotlin/org/universe/cache/CacheClient.kt) allows managing connection and interaction with
+The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and interaction with
 cache automatically. You can create an instance like that :
 
 ```kotlin
@@ -33,7 +33,7 @@ import io.lettuce.core.RedisURI
 import io.lettuce.core.codec.ByteArrayCodec
 import io.lettuce.core.support.BoundedPoolConfig
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.universe.cache.CacheClient
+import org.universe.dataservice.cache.CacheClient
 
 suspend fun createCacheClient(): CacheClient {
   return CacheClient {
@@ -64,16 +64,16 @@ cacheClient.connect {
 Several services are available to interact with the database or the cache.
 
 The default implementation of cache services retrieve
-the [Cache client](src/main/kotlin/org/universe/cache/CacheClient.kt) using the injection
+the [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) using the injection
 by [koin](https://github.com/InsertKoinIO/koin). So before use them, you need to register the instance of cache client
 in your application.
 
 ```kotlin
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
-import org.universe.cache.CacheClient
-import org.universe.data.ClientIdentityCacheService
-import org.universe.data.ClientIdentityCacheServiceImpl
+import org.universe.dataservice.cache.CacheClient
+import org.universe.dataservice.data.ClientIdentityCacheService
+import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
 import java.util.*
 
 suspend fun main() {
@@ -96,22 +96,22 @@ suspend fun main() {
 
 Here a list of service usable :
 
-| Service                                                                               | Import               |
-|---------------------------------------------------------------------------------------|----------------------|
-| [ClientIdentityCacheServiceImpl](src/main/kotlin/org/universe/data/ClientIdentity.kt) | org.universe.data.*  |
-| [ProfileIdServiceImpl](src/main/kotlin/org/universe/data/ProfileId.kt)                | org.universe.data.*  |
-| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/data/ProfileSkin.kt)            | org.universe.data.*  |
+| Service                                                                                           | Import                          |
+|---------------------------------------------------------------------------------------------------|---------------------------------|
+| [ClientIdentityCacheServiceImpl](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) | org.universe.dataservice.data.* |
+| [ProfileIdServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt)                | org.universe.dataservice.data.* |
+| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt)            | org.universe.dataservice.data.* |
 
 ### Supplier
 
 The suppliers allow defining behavior when you interact with a data.
 
-- [Supplier for database](src/main/kotlin/org/universe/supplier/database)
-- [Supplier for http](src/main/kotlin/org/universe/supplier/http)
+- [Supplier for database](src/main/kotlin/org/universe/dataservice/supplier/database)
+- [Supplier for http](src/main/kotlin/org/universe/dataservice/supplier/http)
 
 You can use each type of supplier using the static variable from the 
-[EntitySupplier database](src/main/kotlin/org/universe/supplier/database/EntitySupplier.kt) and 
-[EntitySupplier http](src/main/kotlin/org/universe/supplier/http/EntitySupplier.kt).
+[EntitySupplier database](src/main/kotlin/org/universe/dataservice/supplier/database/EntitySupplier.kt) and 
+[EntitySupplier http](src/main/kotlin/org/universe/dataservice/supplier/http/EntitySupplier.kt).
 
 Using a service, you can change the supplier
 
@@ -129,13 +129,13 @@ clientIdentifyCacheService.withStrategy(EntitySupplier.cachingDatabase)
 
 If you use the default implementation of cache service, it's possible to change some values to set and get information.
 
-| Variables                | Default value | Description                                                                                                                                                                       |
-|--------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| cache.clientId.prefixKey | cliId:        | Define the prefix key to store the [Client identity](src/main/kotlin/org/universe/data/ClientIdentity.kt) information.                                                            |
-| cache.clientId.useUUID   | true          | Store the [Client identity](src/main/kotlin/org/universe/data/ClientIdentity.kt) information using the uuid. *Storage using uuid should not be enabled if name usage is enabled.* |
-| cache.clientId.useName   | false         | Store the [Client identity](src/main/kotlin/org/universe/data/ClientIdentity.kt) information using the name. *Storage using name should not be enabled if name uuid is enabled.*  |
-| cache.skin.prefixKey     | skin:         | Define the prefix key to store the [Profil skin](src/main/kotlin/org/universe/data/ProfileSkin.kt) information.                                                                   |
-| cache.profilId.prefixKey | profId:       | Define the prefix key to store the [Profil Id](src/main/kotlin/org/universe/data/ProfileId.kt) information.                                                                       |
+| Variables                | Default value | Description                                                                                                                                                                                   |
+|--------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cache.clientId.prefixKey | cliId:        | Define the prefix key to store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information.                                                            |
+| cache.clientId.useUUID   | true          | Store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information using the uuid. *Storage using uuid should not be enabled if name usage is enabled.* |
+| cache.clientId.useName   | false         | Store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information using the name. *Storage using name should not be enabled if name uuid is enabled.*  |
+| cache.skin.prefixKey     | skin:         | Define the prefix key to store the [Profil skin](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt) information.                                                                   |
+| cache.profilId.prefixKey | profId:       | Define the prefix key to store the [Profil Id](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt) information.                                                                       |
 
 The values are retrieved from the properties or the environment variables.
 
