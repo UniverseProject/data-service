@@ -1,4 +1,4 @@
-package org.universe.supplier.http
+package org.universe.dataservice.supplier.http
 
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -11,13 +11,13 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.universe.cache.CacheClient
-import org.universe.data.ProfileIdCacheService
-import org.universe.data.ProfileIdCacheServiceImpl
-import org.universe.data.ProfileSkinCacheService
-import org.universe.data.ProfileSkinCacheServiceImpl
-import org.universe.utils.createProfileId
-import org.universe.utils.createProfileSkin
+import org.universe.dataservice.cache.CacheClient
+import org.universe.dataservice.data.ProfileIdCacheService
+import org.universe.dataservice.data.ProfileIdCacheServiceImpl
+import org.universe.dataservice.data.ProfileSkinCacheService
+import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
+import org.universe.dataservice.utils.createProfileId
+import org.universe.dataservice.utils.createProfileSkin
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
