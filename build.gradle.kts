@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
     id("org.jetbrains.dokka") version "1.6.21"
+    id("maven-publish")
 }
 
 val projectVersion: String by project
@@ -117,5 +118,18 @@ tasks {
     dokkaHtml.configure {
         dependsOn(clean)
         outputDirectory.set(file(dokkaOutputDir))
+    }
+
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "org.universe"
+            artifactId = "dataservice"
+            version = projectVersion
+
+            from(components["java"])
+        }
     }
 }
