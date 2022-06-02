@@ -22,6 +22,32 @@ you need this version to use the project.
 
 This library is not currently published in maven central (or other). But this could be done later.
 
+For the moment, you can use [Jitpack](https://jitpack.io) to import a branch as dependency.
+
+**settings.gradle.kts**
+```kotlin
+sourceControl {
+  gitRepository(java.net.URI.create("https://github.com/UniverseProject/DataService.git")) {
+    producesModule("org.universe:DataService")
+  }
+}
+```
+
+**build.gradle.kts**
+```kotlin
+repositories {
+  maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+  implementation("org.universe", "DataService") {
+    version {
+      branch = "chore/publish"
+    }
+  }
+}
+```
+
 ### Cache
 
 The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and
