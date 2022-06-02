@@ -3,12 +3,17 @@ plugins {
     kotlin("plugin.serialization") version "1.6.21"
     id("org.jetbrains.dokka") version "1.6.21"
     id("maven-publish")
+    signing
 }
 
-val projectVersion: String by project
+group = Library.group
+version = Library.version
 
-group = "org.universe"
-version = projectVersion
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
 
 repositories {
     mavenCentral()
@@ -122,14 +127,88 @@ tasks {
 
 }
 
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    archiveClassifier.set("javadoc")
+}
+
+tasks.withType<PublishToMavenRepository>().configureEach {
+    doFirst { require(!Library.isUndefined) { "No release/snapshot version found." } }
+}
+
 publishing {
     publications {
-        create<MavenPublication>("maven") {
-            groupId = "org.universe"
-            artifactId = "dataservice"
-            version = projectVersion
+        create<MavenPublication>(Library.name) {
+            from(components["kotlin"])
+            groupId = Library.group
+            artifactId = Library.name
+            version = Library.version
 
-            from(components["java"])
+            artifact(sourcesJar.get())
+
+            pom {
+                name.set(Library.name)
+                description.set(Library.description)
+                url.set(Library.url)
+
+                organization {
+                    name.set(Organization.name)
+                    url.set(Organization.url)
+                }
+
+                developers {
+                    developer {
+                        name.set(Developer.name)
+                    }
+                }
+
+                issueManagement {
+                    system.set(Issue.system)
+                    url.set(Issue.url)
+                }
+
+                licenses {
+                    license {
+                        name.set(License.name)
+                        url.set(License.url)
+                    }
+                }
+                scm {
+                    connection.set(SCM.connection)
+                    developerConnection.set(SCM.developerConnection)
+                    url.set(Library.url)
+                }
+            }
+
+            if (!isJitPack) {
+                repositories {
+                    maven {
+                        url = if (Library.isSnapshot) uri(Repository.snapshotsUrl) else uri(Repository.releasesUrl)
+                        credentials {
+                            username = Repository.username
+                            password = Repository.password
+                        }
+                    }
+                }
+            }
+
         }
+    }
+
+}
+
+if (!isJitPack && Library.isRelease) {
+    signing {
+        val signingKey = findProperty("signingKey")?.toString()
+        val signingPassword = findProperty("signingPassword")?.toString()
+        if (signingKey != null && signingPassword != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
+        sign(publishing.publications[Library.name])
     }
 }
