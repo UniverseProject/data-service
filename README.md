@@ -42,7 +42,7 @@ repositories {
 dependencies {
   implementation("org.universe", "DataService") {
     version {
-      branch = "chore/publish"
+      branch = "main"
     }
   }
 }
