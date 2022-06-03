@@ -9,9 +9,9 @@ import org.universe.dataservice.data.ProfileSkin
  *
  * Resolved entities will always be stored in [cache] if it wasn't null or empty for flows.
  */
-class StoreEntitySupplier(private val supplier: EntitySupplier) : EntitySupplier, KoinComponent {
+public class StoreEntitySupplier(private val supplier: EntitySupplier) : EntitySupplier, KoinComponent {
 
-    private val cache get() = EntitySupplier.cache
+    private val cache: CacheEntitySupplier get() = EntitySupplier.cache
 
     override suspend fun getId(name: String): ProfileId? {
         return supplier.getId(name)?.also { cache.save(it) }
