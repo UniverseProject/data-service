@@ -1,8 +1,8 @@
 package org.universe.dataservice.supplier.http
 
+import org.universe.dataservice.cache.CacheService
 import org.universe.dataservice.data.*
 import org.universe.dataservice.extension.getPropertyOrEnv
-import org.universe.dataservice.cache.CacheService
 
 /**
  * [EntitySupplier] that uses [CacheService] to resolve entities.

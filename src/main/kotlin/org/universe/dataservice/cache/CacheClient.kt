@@ -29,7 +29,8 @@ public class CacheClient(
 ) : AutoCloseable {
 
     public companion object {
-        public suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient = Builder().apply(builder).build()
+        public suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient =
+            Builder().apply(builder).build()
     }
 
     public object Default {
