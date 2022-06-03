@@ -67,8 +67,8 @@ public class CacheClient(
          * @return A new instance.
          */
         public suspend fun build(): CacheClient {
-            val redisClient = client ?: RedisClient.create()
-            val codec = this.codec
+            val redisClient: RedisClient = client ?: RedisClient.create()
+            val codec: RedisCodec<ByteArray, ByteArray> = this.codec
 
             return CacheClient(
                 uri = uri,
