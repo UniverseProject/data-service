@@ -4,8 +4,8 @@
 val isJitPack get() = "true" == System.getenv("JITPACK")
 
 object Repository {
-    val releasesUrl = "TODO"
-    val snapshotsUrl = "TODO"
+    val releasesUrl = System.getenv("REPOSITORY_RELEASE_URL")
+    val snapshotsUrl = System.getenv("REPOSITORY_SNAPSHOT_URL")
 
     val username: String? get() = System.getenv("REPOSITORY_USER")
     val password: String? get() = System.getenv("REPOSITORY_PASSWORD")
