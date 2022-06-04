@@ -8,13 +8,14 @@ import org.universe.dataservice.data.ProfileSkin
  * is not present from the first supplier it will be fetched from [other] instead. Operations that return flows
  * will only fall back to [other] when the returned flow contained no elements.
  */
-infix fun EntitySupplier.withFallback(other: EntitySupplier): EntitySupplier =
+public infix fun EntitySupplier.withFallback(other: EntitySupplier): EntitySupplier =
     FallbackEntitySupplier(this, other)
 
 /**
  * [EntitySupplier] that uses the first supplier to retrieve a data, if the value is null, get the data through the second supplier.
  */
-class FallbackEntitySupplier(val first: EntitySupplier, val second: EntitySupplier) : EntitySupplier {
+public class FallbackEntitySupplier(public val first: EntitySupplier, public val second: EntitySupplier) :
+    EntitySupplier {
 
     override suspend fun getId(name: String): ProfileId? {
         return invoke { it.getId(name) }

@@ -2,9 +2,11 @@ package org.universe.dataservice.data
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.cache.CacheService
 import org.universe.dataservice.serializer.UUIDSerializer
 import org.universe.dataservice.supplier.database.EntitySupplier
@@ -14,15 +16,15 @@ import java.util.*
 /**
  * Max length of a minecraft player.
  */
-const val MAX_NAME_LENGTH = 16
+public const val MAX_NAME_LENGTH: Int = 16
 
 /**
  * SQL table to interact with [ClientIdentity] data in database.
  */
-object ClientIdentities : Table(ClientIdentity::class.simpleName!!) {
-    val uuid = uuid("uuid").uniqueIndex()
-    val name = varchar("name", MAX_NAME_LENGTH)
-    override val primaryKey = PrimaryKey(uuid)
+public object ClientIdentities : Table(ClientIdentity::class.simpleName!!) {
+    public val uuid: Column<UUID> = uuid("uuid").uniqueIndex()
+    public val name: Column<String> = varchar("name", MAX_NAME_LENGTH)
+    override val primaryKey: PrimaryKey = PrimaryKey(uuid)
 }
 
 /**
@@ -31,7 +33,7 @@ object ClientIdentities : Table(ClientIdentity::class.simpleName!!) {
  * @property name Player's name.
  */
 @Serializable
-data class ClientIdentity(
+public data class ClientIdentity(
     @Serializable(with = UUIDSerializer::class)
     var uuid: UUID,
     var name: String
@@ -40,26 +42,26 @@ data class ClientIdentity(
 /**
  * Service to manage [ClientIdentity] data in cache.
  */
-interface ClientIdentityCacheService {
+public interface ClientIdentityCacheService {
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].
      * @param uuid Id of the user.
      * @return The instance stored if found, or null if not found.
      */
-    suspend fun getByUUID(uuid: UUID): ClientIdentity?
+    public suspend fun getByUUID(uuid: UUID): ClientIdentity?
 
     /**
      * Get the identity of a client from his [ClientIdentity.name].
      * @param name Name of the user.
      * @return The instance stored if found, or null if not found.
      */
-    suspend fun getByName(name: String): ClientIdentity?
+    public suspend fun getByName(name: String): ClientIdentity?
 
     /**
      * Save the instance into cache using the key defined by the configuration.
      * @param identity Data that will be stored.
      */
-    suspend fun save(identity: ClientIdentity)
+    public suspend fun save(identity: ClientIdentity)
 }
 
 /**
@@ -69,13 +71,13 @@ interface ClientIdentityCacheService {
  * @property cacheByUUID `true` if the data should be stored by the [uuid][ClientIdentity.uuid].
  * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
  */
-class ClientIdentityCacheServiceImpl(
+public class ClientIdentityCacheServiceImpl(
     prefixKey: String,
-    val cacheByUUID: Boolean,
-    val cacheByName: Boolean
+    public val cacheByUUID: Boolean,
+    public val cacheByName: Boolean
 ) : CacheService(prefixKey), KoinComponent, ClientIdentityCacheService {
 
-    val client: org.universe.dataservice.cache.CacheClient by inject()
+    public val client: CacheClient by inject()
 
     override suspend fun getByUUID(uuid: UUID): ClientIdentity? {
         if (!cacheByUUID) {
@@ -127,32 +129,32 @@ class ClientIdentityCacheServiceImpl(
 /**
  * Service to retrieve data about clients.
  */
-interface ClientIdentityService : Strategizable {
+public interface ClientIdentityService : Strategizable {
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].
      * @param uuid Id of the user.
      */
-    suspend fun getByUUID(uuid: UUID): ClientIdentity?
+    public suspend fun getByUUID(uuid: UUID): ClientIdentity?
 
     /**
      * Get the identity of a client from his [ClientIdentity.name].
      * @param name Name of the user.
      */
-    suspend fun getByName(name: String): ClientIdentity?
+    public suspend fun getByName(name: String): ClientIdentity?
 
     /**
      * Save a new identity.
      * @param identity Identity of a user.
      */
-    suspend fun save(identity: ClientIdentity)
+    public suspend fun save(identity: ClientIdentity)
 }
 
 /**
  * Service to retrieve data about client identity.
  * @property supplier Strategy to manage data.
  */
-class ClientIdentityServiceImpl(override val supplier: EntitySupplier) : ClientIdentityService {
+public class ClientIdentityServiceImpl(override val supplier: EntitySupplier) : ClientIdentityService {
 
     override suspend fun getByUUID(uuid: UUID): ClientIdentity? = supplier.getIdentityByUUID(uuid)
 
@@ -162,5 +164,5 @@ class ClientIdentityServiceImpl(override val supplier: EntitySupplier) : ClientI
         supplier.saveIdentity(identity)
     }
 
-    override fun withStrategy(strategy: EntitySupplier) = ClientIdentityServiceImpl(strategy)
+    override fun withStrategy(strategy: EntitySupplier): ClientIdentityService = ClientIdentityServiceImpl(strategy)
 }
