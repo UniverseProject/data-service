@@ -10,8 +10,8 @@ import java.util.*
 /**
  * [EntitySupplier] that uses [CacheService] to resolve entities.
  */
-class CacheEntitySupplier(
-    val clientIdentityCache: ClientIdentityCacheService = ClientIdentityCacheServiceImpl(
+public class CacheEntitySupplier(
+    public val clientIdentityCache: ClientIdentityCacheService = ClientIdentityCacheServiceImpl(
         prefixKey = getPropertyOrEnv("cache.clientId.prefixKey") ?: "cliId:",
         cacheByUUID = getPropertyOrEnv("cache.clientId.useUUID")?.toBooleanStrict() ?: true,
         cacheByName = getPropertyOrEnv("cache.clientId.useName")?.toBooleanStrict() ?: false
@@ -22,6 +22,6 @@ class CacheEntitySupplier(
 
     override suspend fun getIdentityByName(name: String): ClientIdentity? = clientIdentityCache.getByName(name)
 
-    override suspend fun saveIdentity(identity: ClientIdentity) = clientIdentityCache.save(identity)
+    override suspend fun saveIdentity(identity: ClientIdentity): Unit = clientIdentityCache.save(identity)
 }
 

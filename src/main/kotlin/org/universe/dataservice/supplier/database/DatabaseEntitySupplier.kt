@@ -10,7 +10,7 @@ import java.util.*
 /**
  * [EntitySupplier] that uses a database client to resolve entities.
  */
-class DatabaseEntitySupplier : EntitySupplier {
+public class DatabaseEntitySupplier : EntitySupplier {
 
     override suspend fun getIdentityByUUID(uuid: UUID): ClientIdentity? = newSuspendedTransaction {
         ClientIdentities.select { ClientIdentities.uuid eq uuid }.singleOrNull()?.let {

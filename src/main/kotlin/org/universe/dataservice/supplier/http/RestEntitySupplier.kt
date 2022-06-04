@@ -14,7 +14,7 @@ import org.universe.dataservice.data.ProfileSkin
  * Error codes besides 429(Too Many Requests) will throw a [ClientRequestException],
  * 404(Not Found) will be caught by the `xOrNull` variant and return null instead.
  */
-class RestEntitySupplier : EntitySupplier, KoinComponent {
+public class RestEntitySupplier : EntitySupplier, KoinComponent {
 
     private val mojangAPI: MojangAPI by inject()
 

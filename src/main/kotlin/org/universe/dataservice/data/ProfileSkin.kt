@@ -7,6 +7,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.cache.CacheService
 import org.universe.dataservice.supplier.http.EntitySupplier
 import org.universe.dataservice.supplier.http.Strategizable
@@ -27,7 +28,7 @@ private const val PROPERTY_TEXTURES = "textures"
  * @property signature Signature of the base64-encoded texture information.
  */
 @Serializable
-data class ProfileSkin(
+public data class ProfileSkin(
     val id: String,
     val name: String,
     val properties: List<Property> = emptyList(),
@@ -35,7 +36,7 @@ data class ProfileSkin(
 ) {
 
     @Serializable
-    data class Property(val name: String, val value: String, val signature: String? = null)
+    public data class Property(val name: String, val value: String, val signature: String? = null)
 
     val skin: String
         get() = getTexturesProperty().value
@@ -49,13 +50,13 @@ data class ProfileSkin(
      * So the property defined as texture property, is the only element.
      * @return The texture property.
      */
-    fun getTexturesProperty() = properties.first { it.name == PROPERTY_TEXTURES }
+    public fun getTexturesProperty(): Property = properties.first { it.name == PROPERTY_TEXTURES }
 
     /**
      * Decode the [skin] value.
      * @return All information present into the encoded value.
      */
-    fun getSkinDecoded() = ProfileSkinDecoded.fromEncoded(skin)
+    public fun getSkinDecoded(): ProfileSkinDecoded = ProfileSkinDecoded.fromEncoded(skin)
 
 }
 
@@ -67,13 +68,13 @@ data class ProfileSkin(
  * @property textures Textures information.
  */
 @Serializable
-data class ProfileSkinDecoded(
+public data class ProfileSkinDecoded(
     val timestamp: Long,
     val profileId: String,
     val profileName: String,
     val textures: Textures
 ) {
-    companion object {
+    public companion object {
 
         private val json: Json = Json {
             ignoreUnknownKeys = true
@@ -84,7 +85,7 @@ data class ProfileSkinDecoded(
          * @param value String encoded with Base64.
          * @return A new instance of [ProfileSkinDecoded].
          */
-        fun fromEncoded(value: String): ProfileSkinDecoded {
+        public fun fromEncoded(value: String): ProfileSkinDecoded {
             return json.decodeFromString(value.decodeBase64String())
         }
     }
@@ -95,7 +96,7 @@ data class ProfileSkinDecoded(
      * @property cape Information about the cape.
      */
     @Serializable
-    data class Textures(
+    public data class Textures(
         @SerialName("SKIN") val skin: Skin,
         @SerialName("CAPE") val cape: Cape? = null
     ) {
@@ -106,14 +107,14 @@ data class ProfileSkinDecoded(
          * @property metadata Metadata of the skin.
          */
         @Serializable
-        data class Skin(val url: String, val metadata: Metadata = Metadata()) {
+        public data class Skin(val url: String, val metadata: Metadata = Metadata()) {
 
             /**
              * Metadata of the skin texture.
              * @property model alex (slim) or steve (classic).
              */
             @Serializable
-            data class Metadata(val model: String = "classic")
+            public data class Metadata(val model: String = "classic")
 
         }
 
@@ -122,24 +123,24 @@ data class ProfileSkinDecoded(
          * @property url URL to get the skin.
          */
         @Serializable
-        data class Cape(val url: String)
+        public data class Cape(val url: String)
 
     }
 }
 
-interface ProfileSkinCacheService {
+public interface ProfileSkinCacheService {
     /**
      * Get the instance of [ProfileSkin] linked to the [uuid] data.
      * @param uuid UUID of the user.
      * @return The instance stored if found, or null if not found.
      */
-    suspend fun getByUUID(uuid: String): ProfileSkin?
+    public suspend fun getByUUID(uuid: String): ProfileSkin?
 
     /**
      * Save the instance into cache using the key defined by the configuration.
      * @param profile Data that will be stored.
      */
-    suspend fun save(profile: ProfileSkin)
+    public suspend fun save(profile: ProfileSkin)
 }
 
 /**
@@ -147,11 +148,11 @@ interface ProfileSkinCacheService {
  * @property client Cache client.
  * @property prefixKey Prefix key to identify the data in cache.
  */
-class ProfileSkinCacheServiceImpl(
+public class ProfileSkinCacheServiceImpl(
     prefixKey: String
 ) : CacheService(prefixKey), KoinComponent, ProfileSkinCacheService {
 
-    val client: org.universe.dataservice.cache.CacheClient by inject()
+    public val client: CacheClient by inject()
 
     override suspend fun getByUUID(uuid: String): ProfileSkin? {
         return client.connect {
@@ -175,22 +176,22 @@ class ProfileSkinCacheServiceImpl(
 /**
  * Service to retrieve data about profile.
  */
-interface ProfileSkinService : Strategizable {
+public interface ProfileSkinService : Strategizable {
 
     /**
      * Get the skin information of a player from his [ProfileSkin.id].
      * @param uuid Profile's id.
      */
-    suspend fun getByUUID(uuid: String): ProfileSkin?
+    public suspend fun getByUUID(uuid: String): ProfileSkin?
 }
 
 /**
  * Service to retrieve data about client identity.
  * @property supplier Strategy to manage data.
  */
-class ProfileSkinServiceImpl(override val supplier: EntitySupplier) : ProfileSkinService {
+public class ProfileSkinServiceImpl(override val supplier: EntitySupplier) : ProfileSkinService {
 
     override suspend fun getByUUID(uuid: String): ProfileSkin? = supplier.getSkin(uuid)
 
-    override fun withStrategy(strategy: EntitySupplier) = ProfileSkinServiceImpl(strategy)
+    override fun withStrategy(strategy: EntitySupplier): ProfileSkinService = ProfileSkinServiceImpl(strategy)
 }

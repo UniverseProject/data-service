@@ -6,16 +6,16 @@ package org.universe.dataservice.supplier.http
  *
  * Unless stated otherwise, all members that fetch entities will delegate to the [supplier].
  */
-interface Strategizable {
+public interface Strategizable {
 
     /**
      * The supplier used to request entities.
      */
-    val supplier: EntitySupplier
+    public val supplier: EntitySupplier
 
 
     /**
      * Returns a copy of this class with a new [supplier] provided by the [strategy].
      */
-    fun withStrategy(strategy: EntitySupplier): Strategizable
+    public fun withStrategy(strategy: EntitySupplier): Strategizable
 }
