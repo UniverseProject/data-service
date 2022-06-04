@@ -7,8 +7,8 @@ object Repository {
     val releasesUrl = "TODO"
     val snapshotsUrl = "TODO"
 
-    val username: String? get() = System.getenv("NEXUS_USER")
-    val password: String? get() = System.getenv("NEXUS_PASSWORD")
+    val username: String? get() = System.getenv("REPOSITORY_USER")
+    val password: String? get() = System.getenv("REPOSITORY_PASSWORD")
 }
 
 object Organization {
@@ -57,9 +57,6 @@ object Library {
 
     val isSnapshot: Boolean get() = version.endsWith("-SNAPSHOT")
 
-    /**
-     * Whether the current API is considered stable, and should be compared to the 'golden' API dump.
-     */
     val isRelease: Boolean get() = !isSnapshot && !isUndefined
 
     val isUndefined get() = version == "undefined"
