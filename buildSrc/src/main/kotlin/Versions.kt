@@ -1,11 +1,13 @@
+private const val undefined = "undefined"
+
 /**
  * whether the process has been invoked by JitPack
  */
 val isJitPack get() = "true" == System.getenv("JITPACK")
 
 object Repository {
-    val releasesUrl = System.getenv("REPOSITORY_RELEASE_URL")
-    val snapshotsUrl = System.getenv("REPOSITORY_SNAPSHOT_URL")
+    val releasesUrl = System.getenv("REPOSITORY_RELEASE_URL") ?: undefined
+    val snapshotsUrl = System.getenv("REPOSITORY_SNAPSHOT_URL") ?: undefined
 
     val username: String? get() = System.getenv("REPOSITORY_USER")
     val password: String? get() = System.getenv("REPOSITORY_PASSWORD")
@@ -59,5 +61,5 @@ object Library {
 
     val isRelease: Boolean get() = !isSnapshot && !isUndefined
 
-    val isUndefined get() = version == "undefined"
+    val isUndefined get() = version == undefined
 }
