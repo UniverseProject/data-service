@@ -38,6 +38,6 @@ jobs:
 
     - name: Test Summary
       if: always()
-      uses: EnricoMi/publish-unit-test-result-action@v1
+      uses: EnricoMi/publish-unit-test-result-action@v2
       with:
         files: "**/build/test-results/test/TEST-*.xml"
