@@ -23,7 +23,7 @@ you need this version to use the project.
 You can find the artifact on [Jitpack](https://jitpack.io/#UniverseProject/DataService).
 Use the version you prefer by following the tutorial on jitpack.
 
-For example, if I want the artefact at the commit `0123456789`, I need to declare :
+For example, if I want the artifact at the commit `0123456789`, I need to declare :
 
 ````kotlin
 // gradle.kts
