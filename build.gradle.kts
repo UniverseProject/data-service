@@ -126,7 +126,6 @@ tasks {
         dependsOn(clean)
         outputDirectory.set(file(dokkaOutputDir))
     }
-
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
@@ -137,10 +136,6 @@ val sourcesJar by tasks.registering(Jar::class) {
 val javadocJar by tasks.registering(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
     archiveClassifier.set("javadoc")
-}
-
-tasks.withType<PublishToMavenRepository>().configureEach {
-    doFirst { require(!Library.isUndefined) { "No release/snapshot version found." } }
 }
 
 publishing {
@@ -186,31 +181,6 @@ publishing {
                     url.set(Library.url)
                 }
             }
-
-            if (!isJitPack) {
-                repositories {
-                    maven {
-                        url = if (Library.isSnapshot) uri(Repository.snapshotsUrl) else uri(Repository.releasesUrl)
-                        credentials {
-                            username = Repository.username
-                            password = Repository.password
-                        }
-                    }
-                }
-            }
-
         }
-    }
-
-}
-
-if (!isJitPack && Library.isRelease) {
-    signing {
-        val signingKey = findProperty("signingKey")?.toString()
-        val signingPassword = findProperty("signingPassword")?.toString()
-        if (signingKey != null && signingPassword != null) {
-            useInMemoryPgpKeys(signingKey, signingPassword)
-        }
-        sign(publishing.publications[Library.name])
     }
 }
