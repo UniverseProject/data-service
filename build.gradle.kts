@@ -1,13 +1,19 @@
 plugins {
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.jetbrains.dokka") version "1.6.21"
+    id("maven-publish")
+    signing
 }
 
-val projectVersion: String by project
+group = Library.group
+version = Library.version
 
-group = "org.universe"
-version = projectVersion
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
 
 repositories {
     mavenCentral()
@@ -110,11 +116,71 @@ tasks {
         kotlinOptions.jvmTarget = "17"
     }
 
-    build {
-        dependsOn(shadowJar)
+    val dokkaOutputDir = "${rootProject.projectDir}/dokka"
+
+    clean {
+        delete(dokkaOutputDir)
     }
-    shadowJar {
-        archiveFileName.set("${project.name}.jar")
-        destinationDirectory.set(file("build"))
+
+    dokkaHtml.configure {
+        dependsOn(clean)
+        outputDirectory.set(file(dokkaOutputDir))
+    }
+}
+
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>(Library.name) {
+            from(components["kotlin"])
+            groupId = Library.group
+            artifactId = Library.name
+            version = Library.version
+
+            artifact(sourcesJar.get())
+
+            pom {
+                name.set(Library.name)
+                description.set(Library.description)
+                url.set(Library.url)
+
+                organization {
+                    name.set(Organization.name)
+                    url.set(Organization.url)
+                }
+
+                developers {
+                    developer {
+                        name.set(Developer.name)
+                    }
+                }
+
+                issueManagement {
+                    system.set(Issue.system)
+                    url.set(Issue.url)
+                }
+
+                licenses {
+                    license {
+                        name.set(License.name)
+                        url.set(License.url)
+                    }
+                }
+                scm {
+                    connection.set(SCM.connection)
+                    developerConnection.set(SCM.developerConnection)
+                    url.set(Library.url)
+                }
+            }
+        }
     }
 }

@@ -20,33 +20,21 @@ you need this version to use the project.
 
 ## Use in your projects
 
-This library is not currently published in maven central (or other). But this could be done later.
+You can find the artefact on [Jitpack](https://jitpack.io/#UniverseProject/DataService).
+Use the version you prefer by following the tutorial on jitpack.
 
-For the moment, you can use [Jitpack](https://jitpack.io) to import a branch as dependency.
+For example, if I want the artefact at the commit `0123456789`, I need to declare :
 
-**settings.gradle.kts**
-```kotlin
-sourceControl {
-  gitRepository(java.net.URI.create("https://github.com/UniverseProject/DataService.git")) {
-    producesModule("org.universe:DataService")
-  }
-}
-```
-
-**build.gradle.kts**
-```kotlin
+````kotlin
+// gradle.kts
 repositories {
   maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-  implementation("org.universe", "DataService") {
-    version {
-      branch = "main"
-    }
-  }
+  implementation("com.github.UniverseProject:DataService:0123456789")
 }
-```
+````
 
 ### Cache
 
