@@ -6,9 +6,6 @@ plugins {
     signing
 }
 
-group = Library.group
-version = Library.version
-
 buildscript {
     repositories {
         mavenCentral()
@@ -142,14 +139,14 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["kotlin"])
-            groupId = Library.group
-            artifactId = Library.name
-            version = Library.version
+            groupId = project.properties["group"] as? String? ?: "org.universe"
+            artifactId = project.name
+            version = project.properties["version"] as? String? ?: "1.0"
 
             artifact(sourcesJar.get())
 
             pom {
-                name.set(Library.name)
+                name.set(project.name)
                 description.set(Library.description)
                 url.set(Library.url)
 

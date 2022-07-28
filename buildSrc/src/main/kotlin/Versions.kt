@@ -25,10 +25,6 @@ object License {
 }
 
 object Library {
-    const val name = "dataservice"
-    const val group = "org.universe"
     const val description = "Allows data management through a cache and a database"
     const val url = "${Organization.url}/DataService"
-    val version: String
-        get() = System.getenv("RELEASE_TAG") ?: undefined
 }
