@@ -140,7 +140,7 @@ val javadocJar by tasks.registering(Jar::class) {
 
 publishing {
     publications {
-        create<MavenPublication>(Library.name) {
+        create<MavenPublication>("maven") {
             from(components["kotlin"])
             groupId = Library.group
             artifactId = Library.name
