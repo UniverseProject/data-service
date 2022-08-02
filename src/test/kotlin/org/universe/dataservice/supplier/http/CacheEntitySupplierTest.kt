@@ -74,7 +74,7 @@ class CacheEntitySupplierTest : KoinTest {
             val name = profile.name
             coEvery { cacheService.getByName(name) } returns profile
 
-            assertEquals(profile, supplier.getId(name))
+            assertEquals(profile, supplier.getUUID(name))
             coVerify(exactly = 1) { cacheService.getByName(name) }
         }
 

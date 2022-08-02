@@ -1,6 +1,5 @@
 package org.universe.dataservice.supplier.database
 
-import org.koin.core.component.KoinComponent
 import org.universe.dataservice.data.ClientIdentity
 import java.util.*
 
@@ -9,9 +8,7 @@ import java.util.*
  *
  * Resolved entities will always be stored in [cache] if it wasn't null or empty for flows.
  */
-public class StoreEntitySupplier(private val supplier: EntitySupplier) : EntitySupplier, KoinComponent {
-
-    private val cache: EntitySupplier get() = EntitySupplier.cache
+public class StoreEntitySupplier(private val cache: CacheEntitySupplier, private val supplier: EntitySupplier) : EntitySupplier {
 
     override suspend fun getIdentityByUUID(uuid: UUID): ClientIdentity? =
         saveIdentityInCache(supplier.getIdentityByUUID(uuid))

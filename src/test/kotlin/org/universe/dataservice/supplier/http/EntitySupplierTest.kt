@@ -83,9 +83,9 @@ class EntitySupplierCompanionTest : KoinTest {
             val profileId = createProfileId()
             val name = profileId.name
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 1) { mojangAPI.getId(name) }
-            assertEquals(profileId, cacheEntitySupplier.getId(name))
+            assertEquals(profileId, cacheEntitySupplier.getUUID(name))
         }
 
         @Test
@@ -95,7 +95,7 @@ class EntitySupplierCompanionTest : KoinTest {
             cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 1) { mojangAPI.getId(name) }
         }
     }
@@ -116,9 +116,9 @@ class EntitySupplierCompanionTest : KoinTest {
             val profileId = createProfileId()
             val name = profileId.name
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 1) { mojangAPI.getId(name) }
-            assertNull(cacheEntitySupplier.getId(name))
+            assertNull(cacheEntitySupplier.getUUID(name))
         }
 
         @Test
@@ -128,7 +128,7 @@ class EntitySupplierCompanionTest : KoinTest {
             cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 0) { mojangAPI.getId(name) }
         }
     }
@@ -149,9 +149,9 @@ class EntitySupplierCompanionTest : KoinTest {
             val profileId = createProfileId()
             val name = profileId.name
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 1) { mojangAPI.getId(name) }
-            assertEquals(profileId, cacheEntitySupplier.getId(name))
+            assertEquals(profileId, cacheEntitySupplier.getUUID(name))
         }
 
         @Test
@@ -161,7 +161,7 @@ class EntitySupplierCompanionTest : KoinTest {
             cacheEntitySupplier.save(profileId)
 
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, supplier.getId(name))
+            assertEquals(profileId, supplier.getUUID(name))
             coVerify(exactly = 0) { mojangAPI.getId(name) }
         }
     }

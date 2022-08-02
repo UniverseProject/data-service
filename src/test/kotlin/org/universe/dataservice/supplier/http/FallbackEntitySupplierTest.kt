@@ -39,13 +39,13 @@ class FallbackEntitySupplierTest {
             val id = createProfileId()
             val name = id.name
 
-            coEvery { first.getId(any()) } returns null
-            coEvery { second.getId(any()) } returns null
+            coEvery { first.getUUID(any()) } returns null
+            coEvery { second.getUUID(any()) } returns null
 
-            assertNull(fallbackEntitySupplier.getId(name))
+            assertNull(fallbackEntitySupplier.getUUID(name))
 
-            coVerify(exactly = 1) { first.getId(name) }
-            coVerify(exactly = 1) { second.getId(name) }
+            coVerify(exactly = 1) { first.getUUID(name) }
+            coVerify(exactly = 1) { second.getUUID(name) }
         }
 
         @Test
@@ -55,20 +55,20 @@ class FallbackEntitySupplierTest {
             val id = createProfileId()
             val name = id.name
 
-            coEvery { first.getId(any()) } returns id
-            coEvery { second.getId(any()) } returns null
+            coEvery { first.getUUID(any()) } returns id
+            coEvery { second.getUUID(any()) } returns null
 
-            assertEquals(id, fallbackEntitySupplier.getId(name))
-            coVerify(exactly = 1) { first.getId(name) }
-            coVerify(exactly = 0) { second.getId(name) }
+            assertEquals(id, fallbackEntitySupplier.getUUID(name))
+            coVerify(exactly = 1) { first.getUUID(name) }
+            coVerify(exactly = 0) { second.getUUID(name) }
 
-            coEvery { first.getId(any()) } returns null
-            coEvery { second.getId(any()) } returns id
+            coEvery { first.getUUID(any()) } returns null
+            coEvery { second.getUUID(any()) } returns id
 
-            assertEquals(id, fallbackEntitySupplier.getId(name))
+            assertEquals(id, fallbackEntitySupplier.getUUID(name))
 
-            coVerify(exactly = 2) { first.getId(name) }
-            coVerify(exactly = 1) { second.getId(name) }
+            coVerify(exactly = 2) { first.getUUID(name) }
+            coVerify(exactly = 1) { second.getUUID(name) }
         }
 
     }

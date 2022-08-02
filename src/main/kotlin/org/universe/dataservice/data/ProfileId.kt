@@ -1,21 +1,14 @@
+@file:OptIn(ExperimentalLettuceCoroutinesApi::class)
+
 package org.universe.dataservice.data
 
-import kotlinx.serialization.Serializable
+import io.github.universeproject.ProfileId
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import kotlinx.serialization.builtins.serializer
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.cache.CacheService
 import org.universe.dataservice.supplier.http.EntitySupplier
 import org.universe.dataservice.supplier.http.Strategizable
-
-/**
- * Expected response of the Mojang api to retrieve id from a name.
- * @property name Player's name.
- * @property id Player's uuid.
- */
-@Serializable
-public data class ProfileId(val name: String, val id: String)
 
 /**
  * Service to manage [ProfileId] data in cache.
@@ -41,10 +34,9 @@ public interface ProfileIdCacheService {
  * @property prefixKey Prefix key to identify the data in cache.
  */
 public class ProfileIdCacheServiceImpl(
-    prefixKey: String
-) : CacheService(prefixKey), KoinComponent, ProfileIdCacheService {
-
-    public val client: CacheClient by inject()
+    public val client: CacheClient,
+    prefixKey: String = "profId:"
+) : CacheService(prefixKey), ProfileIdCacheService {
 
     override suspend fun getByName(name: String): ProfileId? {
         return client.connect {
@@ -83,7 +75,7 @@ public interface ProfileIdService : Strategizable {
  */
 public class ProfileIdServiceImpl(override val supplier: EntitySupplier) : ProfileIdService {
 
-    override suspend fun getByName(name: String): ProfileId? = supplier.getId(name)
+    override suspend fun getByName(name: String): ProfileId? = supplier.getUUID(name)
 
     override fun withStrategy(strategy: EntitySupplier): ProfileIdService = ProfileIdServiceImpl(strategy)
 }

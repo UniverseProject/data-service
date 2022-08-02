@@ -46,7 +46,7 @@ class ProfileIdServiceImplTest {
 
         @Test
         override fun `data is not found into supplier`() = runBlocking {
-            coEvery { supplier.getId(any()) } returns null
+            coEvery { supplier.getUUID(any()) } returns null
             assertNull(serviceImpl.getByName(getRandomString()))
         }
 
@@ -54,9 +54,9 @@ class ProfileIdServiceImplTest {
         override fun `data is retrieved from supplier`() = runBlocking {
             val profile = createProfileId()
             val name = profile.name
-            coEvery { supplier.getId(name) } returns profile
+            coEvery { supplier.getUUID(name) } returns profile
             assertEquals(profile, serviceImpl.getByName(name))
-            coVerify(exactly = 1) { supplier.getId(name) }
+            coVerify(exactly = 1) { supplier.getUUID(name) }
         }
     }
 }

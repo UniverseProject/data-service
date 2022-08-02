@@ -52,7 +52,7 @@ class RestEntitySupplierTest : KoinTest {
         override fun `data not found from rest`() = runBlocking {
             coEvery { mojangAPI.getId(any()) } returns null
             val id = getRandomString()
-            assertNull(restEntitySupplier.getId(id))
+            assertNull(restEntitySupplier.getUUID(id))
             coVerify(exactly = 1) { mojangAPI.getId(id) }
         }
 
@@ -61,7 +61,7 @@ class RestEntitySupplierTest : KoinTest {
             val profileId = createProfileId()
             val name = profileId.name
             coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, restEntitySupplier.getId(name))
+            assertEquals(profileId, restEntitySupplier.getUUID(name))
             coVerify(exactly = 1) { mojangAPI.getId(name) }
         }
 

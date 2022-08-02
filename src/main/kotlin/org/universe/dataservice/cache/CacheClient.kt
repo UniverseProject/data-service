@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package org.universe.dataservice.cache
 
 import io.lettuce.core.RedisClient
@@ -12,6 +14,7 @@ import io.lettuce.core.support.BoundedAsyncPool
 import io.lettuce.core.support.BoundedPoolConfig
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.BinaryFormat
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 
 /**

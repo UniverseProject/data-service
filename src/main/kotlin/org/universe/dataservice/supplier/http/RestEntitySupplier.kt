@@ -1,25 +1,17 @@
 package org.universe.dataservice.supplier.http
 
+import io.github.universeproject.MojangAPI
+import io.github.universeproject.ProfileId
+import io.github.universeproject.ProfileSkin
 import io.ktor.client.*
-import io.ktor.client.plugins.*
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.universe.dataservice.data.MojangAPI
-import org.universe.dataservice.data.ProfileId
-import org.universe.dataservice.data.ProfileSkin
 
 /**
  * [EntitySupplier] that uses a [HttpClient] to resolve entities.
- *
- * Error codes besides 429(Too Many Requests) will throw a [ClientRequestException],
- * 404(Not Found) will be caught by the `xOrNull` variant and return null instead.
  */
-public class RestEntitySupplier : EntitySupplier, KoinComponent {
+public class RestEntitySupplier(private val mojangAPI: MojangAPI) : EntitySupplier {
 
-    private val mojangAPI: MojangAPI by inject()
-
-    override suspend fun getId(name: String): ProfileId? {
-        return mojangAPI.getId(name)
+    override suspend fun getUUID(name: String): ProfileId? {
+        return mojangAPI.getUUID(name)
     }
 
     override suspend fun getSkin(uuid: String): ProfileSkin? {

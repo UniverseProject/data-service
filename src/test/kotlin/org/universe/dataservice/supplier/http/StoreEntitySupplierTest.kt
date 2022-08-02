@@ -68,18 +68,18 @@ class StoreEntitySupplierTest : KoinTest {
         override fun `data not stored into cache if data not exists`() = runBlocking {
             val id = createProfileId()
             val name = id.name
-            coEvery { mockSupplier.getId(name) } returns null
-            assertNull(storeEntitySupplier.getId(name))
-            assertNull(cacheEntitySupplier.getId(name))
+            coEvery { mockSupplier.getUUID(name) } returns null
+            assertNull(storeEntitySupplier.getUUID(name))
+            assertNull(cacheEntitySupplier.getUUID(name))
         }
 
         @Test
         override fun `data stored if found`() = runBlocking {
             val id = createProfileId()
             val name = id.name
-            coEvery { mockSupplier.getId(name) } returns id
-            assertEquals(id, storeEntitySupplier.getId(name))
-            assertEquals(id, cacheEntitySupplier.getId(name))
+            coEvery { mockSupplier.getUUID(name) } returns id
+            assertEquals(id, storeEntitySupplier.getUUID(name))
+            assertEquals(id, cacheEntitySupplier.getUUID(name))
         }
 
     }

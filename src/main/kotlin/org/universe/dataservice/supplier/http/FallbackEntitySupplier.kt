@@ -1,7 +1,7 @@
 package org.universe.dataservice.supplier.http
 
-import org.universe.dataservice.data.ProfileId
-import org.universe.dataservice.data.ProfileSkin
+import io.github.universeproject.ProfileId
+import io.github.universeproject.ProfileSkin
 
 /**
  * Creates supplier providing a strategy which will first operate on this supplier. When an entity
@@ -17,8 +17,8 @@ public infix fun EntitySupplier.withFallback(other: EntitySupplier): EntitySuppl
 public class FallbackEntitySupplier(public val first: EntitySupplier, public val second: EntitySupplier) :
     EntitySupplier {
 
-    override suspend fun getId(name: String): ProfileId? {
-        return invoke { it.getId(name) }
+    override suspend fun getUUID(name: String): ProfileId? {
+        return invoke { it.getUUID(name) }
     }
 
     override suspend fun getSkin(uuid: String): ProfileSkin? {
