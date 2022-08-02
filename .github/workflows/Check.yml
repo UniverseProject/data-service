@@ -6,9 +6,6 @@ on:
       - 'dependabot-**'
     paths-ignore:
       - '**.md'
-  workflow_dispatch:
-    branches:
-      - master
 
 concurrency:
   group: check-${{ github.ref }}
@@ -27,17 +24,11 @@ jobs:
         jdk: 17
 
     - name: Build
-      uses: gradle/gradle-build-action@v2.1.7
+      uses: gradle/gradle-build-action@v2.2.2
       with:
         arguments: build -x test
 
     - name: Test
-      uses: gradle/gradle-build-action@v2.1.7
+      uses: gradle/gradle-build-action@v2.2.2
       with:
         arguments: test
-
-    - name: Test Summary
-      if: always()
-      uses: EnricoMi/publish-unit-test-result-action@v1
-      with:
-        files: "**/build/test-results/test/TEST-*.xml"

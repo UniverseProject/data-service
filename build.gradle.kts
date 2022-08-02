@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
-    id("org.jetbrains.dokka") version "1.6.21"
+    kotlin("jvm") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
+    id("org.jetbrains.dokka") version "1.7.10"
     id("maven-publish")
     signing
 }
@@ -35,14 +35,12 @@ val testContainersVersion: String by project
 val psqlVersion: String by project
 val konfVersion: String by project
 val lettuceVersion: String by project
-val apachePoolVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test-junit5"))
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutineReactiveVersion")
-
 
     // Koin for inject instance
     implementation("io.insert-koin:koin-core:$koinVersion")
@@ -73,7 +71,6 @@ dependencies {
 
     // Redis cache
     implementation("io.lettuce:lettuce-core:$lettuceVersion")
-    implementation("org.apache.commons:commons-pool2:$apachePoolVersion")
 
     // Logging information
     implementation("io.github.microutils:kotlin-logging:$loggingVersion")
