@@ -28,6 +28,5 @@ runs:
           ${{ runner.os }}-gradle-
 
     - name: Set permission to execute gradle
-      if: ${{ inputs.jdk != '' }}
       shell: bash
       run: chmod +x gradlew
