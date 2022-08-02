@@ -1,7 +1,6 @@
 package org.universe.dataservice.supplier.http
 
 import org.universe.dataservice.supplier.SupplierConfiguration
-import org.universe.dataservice.supplier.database.DatabaseEntitySupplier
 
 public interface EntitySupplyStrategy<T : EntitySupplier> {
 
@@ -9,9 +8,9 @@ public interface EntitySupplyStrategy<T : EntitySupplier> {
 
         /**
          * A supplier providing a strategy which exclusively uses database calls to fetch entities.
-         * See [DatabaseEntitySupplier] for more details.
+         * See [RestEntitySupplier] for more details.
          */
-        public val database: EntitySupplyStrategy<RestEntitySupplier> =
+        public val rest: EntitySupplyStrategy<RestEntitySupplier> =
             object : EntitySupplyStrategy<RestEntitySupplier> {
 
                 override fun supply(configuration: SupplierConfiguration): RestEntitySupplier =
@@ -36,37 +35,37 @@ public interface EntitySupplyStrategy<T : EntitySupplier> {
          * fetched entities are stored in [cache].
          * See [StoreEntitySupplier] for more details.
          */
-        public val cachingDatabase: EntitySupplyStrategy<StoreEntitySupplier> =
+        public val cachingRest: EntitySupplyStrategy<StoreEntitySupplier> =
             object : EntitySupplyStrategy<StoreEntitySupplier> {
 
                 override fun supply(configuration: SupplierConfiguration): StoreEntitySupplier =
-                    StoreEntitySupplier(cache.supply(configuration), database.supply(configuration))
+                    StoreEntitySupplier(cache.supply(configuration), rest.supply(configuration))
 
             }
 
         /**
          * A supplier providing a strategy which will first operate on the [cache] supplier. When an entity
-         * is not present from cache it will be fetched from [database] instead. Operations that return flows
+         * is not present from cache it will be fetched from [rest] instead. Operations that return flows
          * will only fall back to rest when the returned flow contained no elements.
          */
-        public val cacheWithDatabaseFallback: EntitySupplyStrategy<EntitySupplier> =
+        public val cacheWithRestFallback: EntitySupplyStrategy<EntitySupplier> =
             object : EntitySupplyStrategy<EntitySupplier> {
 
                 override fun supply(configuration: SupplierConfiguration): EntitySupplier =
-                    cache.supply(configuration) withFallback database.supply(configuration)
+                    cache.supply(configuration) withFallback rest.supply(configuration)
 
             }
 
         /**
          * A supplier providing a strategy which will first operate on the [cache] supplier. When an entity
-         * is not present from cache it will be fetched from [cachingDatabase] instead which will update [cache] with fetched elements.
+         * is not present from cache it will be fetched from [cachingRest] instead which will update [cache] with fetched elements.
          * Operations that return flows will only fall back to rest when the returned flow contained no elements.
          */
-        public val cacheWithCachingDatabaseFallback: EntitySupplyStrategy<EntitySupplier> =
+        public val cacheWithCachingRestFallback: EntitySupplyStrategy<EntitySupplier> =
             object : EntitySupplyStrategy<EntitySupplier> {
 
                 override fun supply(configuration: SupplierConfiguration): EntitySupplier =
-                    cache.supply(configuration) withFallback cachingDatabase.supply(configuration)
+                    cache.supply(configuration) withFallback cachingRest.supply(configuration)
 
             }
     }

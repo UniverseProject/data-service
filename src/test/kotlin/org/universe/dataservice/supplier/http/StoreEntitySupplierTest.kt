@@ -6,19 +6,21 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.container.createRedisContainer
+import org.universe.dataservice.data.ProfileIdCacheServiceImpl
+import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
 import org.universe.dataservice.utils.createProfileId
 import org.universe.dataservice.utils.createProfileSkin
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @Testcontainers
-class StoreEntitySupplierTest : KoinTest {
+class StoreEntitySupplierTest {
 
     companion object {
         @JvmStatic
@@ -26,7 +28,7 @@ class StoreEntitySupplierTest : KoinTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: org.universe.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var storeEntitySupplier: StoreEntitySupplier
     private lateinit var mockSupplier: EntitySupplier
@@ -34,25 +36,18 @@ class StoreEntitySupplierTest : KoinTest {
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = org.universe.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
 
-        startKoin {
-            modules(
-                module {
-                    single { cacheClient }
-                })
-        }
         mockSupplier = mockk()
-        storeEntitySupplier = StoreEntitySupplier(mockSupplier)
         // Use to verify if data is inserted
-        cacheEntitySupplier = CacheEntitySupplier()
-    }
+        cacheEntitySupplier = CacheEntitySupplier(
+            ProfileSkinCacheServiceImpl(cacheClient),
+            ProfileIdCacheServiceImpl(cacheClient)
+        )
 
-    @AfterTest
-    fun onAfter() {
-        stopKoin()
+        storeEntitySupplier = StoreEntitySupplier(cacheEntitySupplier, mockSupplier)
     }
 
     interface StoreTest {

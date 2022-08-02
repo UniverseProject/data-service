@@ -3,7 +3,8 @@ package org.universe.dataservice.supplier.http
 import io.github.universeproject.ProfileId
 import io.github.universeproject.ProfileSkin
 import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.data.*
+import org.universe.dataservice.data.ProfileIdCacheService
+import org.universe.dataservice.data.ProfileSkinCacheService
 
 /**
  * [EntitySupplier] that uses [CacheService] to resolve entities.

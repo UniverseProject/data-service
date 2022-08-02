@@ -1,5 +1,6 @@
 package org.universe.dataservice.supplier.http
 
+import io.github.universeproject.MojangAPI
 import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -7,22 +8,19 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.bind
-import org.koin.dsl.module
-import org.koin.test.KoinTest
-import org.koin.test.inject
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.MojangAPI
+import org.universe.dataservice.data.ProfileIdCacheServiceImpl
+import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
+import org.universe.dataservice.supplier.SupplierConfiguration
 import org.universe.dataservice.utils.createProfileId
 import org.universe.dataservice.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
-class EntitySupplierCompanionTest : KoinTest {
+class EntitySupplierStrategyTest {
 
     companion object {
         @JvmStatic
@@ -30,61 +28,63 @@ class EntitySupplierCompanionTest : KoinTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: org.universe.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
-    private val mojangAPI: MojangAPI by inject()
+    private lateinit var configuration: SupplierConfiguration
+
+    private lateinit var mojangAPI: MojangAPI
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = org.universe.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
 
-        startKoin {
-            modules(
-                module {
-                    single { mockk<MojangAPI>(getRandomString()) } bind MojangAPI::class
-                    single { cacheClient }
-                })
-        }
-        cacheEntitySupplier = CacheEntitySupplier()
+        mojangAPI = mockk(getRandomString())
+
+        cacheEntitySupplier = CacheEntitySupplier(
+            ProfileSkinCacheServiceImpl(cacheClient),
+            ProfileIdCacheServiceImpl(cacheClient)
+        )
+        configuration = SupplierConfiguration(mojangAPI, cacheClient)
     }
 
     @AfterTest
     fun onAfter() {
-        stopKoin()
         cacheClient.close()
     }
 
     @Test
     fun `rest supplier corresponding to the class`() {
-        assertEquals(RestEntitySupplier::class, EntitySupplier.rest::class)
+        val configuration = SupplierConfiguration(mockk(), mockk())
+        assertEquals(RestEntitySupplier::class, EntitySupplyStrategy.rest.supply(configuration)::class)
     }
 
     @Test
     fun `cache supplier corresponding to the class`() {
-        assertEquals(CacheEntitySupplier::class, EntitySupplier.cache::class)
+        val configuration = SupplierConfiguration(mockk(), mockk())
+        assertEquals(CacheEntitySupplier::class, EntitySupplyStrategy.cache.supply(configuration)::class)
     }
 
     @Nested
     @DisplayName("Caching rest")
-    inner class CachingRest : KoinTest {
+    inner class CachingRest {
 
         private lateinit var supplier: EntitySupplier
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cachingRest
+            supplier = EntitySupplyStrategy.cachingRest.supply(configuration)
         }
 
         @Test
         fun `data found in rest is saved into cache`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 1) { mojangAPI.getId(name) }
+            coVerify(exactly = 1) { mojangAPI.getUUID(name) }
             assertEquals(profileId, cacheEntitySupplier.getUUID(name))
         }
 
@@ -94,30 +94,30 @@ class EntitySupplierCompanionTest : KoinTest {
             val name = profileId.name
             cacheEntitySupplier.save(profileId)
 
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 1) { mojangAPI.getId(name) }
+            coVerify(exactly = 1) { mojangAPI.getUUID(name) }
         }
     }
 
     @Nested
     @DisplayName("Cache with Rest fallback")
-    inner class CacheWithRestFallback : KoinTest {
+    inner class CacheWithRestFallback {
 
         private lateinit var supplier: EntitySupplier
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cacheWithRestFallback
+            supplier = EntitySupplyStrategy.cacheWithRestFallback.supply(configuration)
         }
 
         @Test
         fun `data found in rest is not saved into cache`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 1) { mojangAPI.getId(name) }
+            coVerify(exactly = 1) { mojangAPI.getUUID(name) }
             assertNull(cacheEntitySupplier.getUUID(name))
         }
 
@@ -127,30 +127,30 @@ class EntitySupplierCompanionTest : KoinTest {
             val name = profileId.name
             cacheEntitySupplier.save(profileId)
 
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 0) { mojangAPI.getId(name) }
+            coVerify(exactly = 0) { mojangAPI.getUUID(name) }
         }
     }
 
     @Nested
     @DisplayName("Cache with caching result of Rest fallback")
-    inner class CacheWithCachingRestFallback : KoinTest {
+    inner class CacheWithCachingRestFallback {
 
         private lateinit var supplier: EntitySupplier
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cacheWithCachingRestFallback
+            supplier = EntitySupplyStrategy.cacheWithCachingRestFallback.supply(configuration)
         }
 
         @Test
         fun `data found in rest is saved into cache`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 1) { mojangAPI.getId(name) }
+            coVerify(exactly = 1) { mojangAPI.getUUID(name) }
             assertEquals(profileId, cacheEntitySupplier.getUUID(name))
         }
 
@@ -160,9 +160,9 @@ class EntitySupplierCompanionTest : KoinTest {
             val name = profileId.name
             cacheEntitySupplier.save(profileId)
 
-            coEvery { mojangAPI.getId(name) } returns profileId
+            coEvery { mojangAPI.getUUID(name) } returns profileId
             assertEquals(profileId, supplier.getUUID(name))
-            coVerify(exactly = 0) { mojangAPI.getId(name) }
+            coVerify(exactly = 0) { mojangAPI.getUUID(name) }
         }
     }
 

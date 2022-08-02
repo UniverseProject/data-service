@@ -1,27 +1,27 @@
 package org.universe.dataservice.supplier.database
 
 import io.lettuce.core.RedisURI
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.container.createPSQLContainer
 import org.universe.dataservice.container.createRedisContainer
 import org.universe.dataservice.data.ClientIdentities
+import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
+import org.universe.dataservice.supplier.SupplierConfiguration
 import org.universe.dataservice.utils.createIdentity
 import kotlin.test.*
 
 @Testcontainers
-class EntitySupplierCompanionTest : KoinTest {
+class EntitySupplierStrategyTest {
 
     companion object {
         @JvmStatic
@@ -33,14 +33,16 @@ class EntitySupplierCompanionTest : KoinTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: org.universe.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
+
+    private lateinit var configuration: SupplierConfiguration
 
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
     private lateinit var databaseSupplier: EntitySupplier
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = org.universe.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
         Database.connect(
@@ -53,30 +55,24 @@ class EntitySupplierCompanionTest : KoinTest {
             SchemaUtils.create(ClientIdentities)
         }
 
-        startKoin {
-            modules(
-                module {
-                    single { cacheClient }
-                })
-        }
-        cacheEntitySupplier = CacheEntitySupplier()
+        cacheEntitySupplier = CacheEntitySupplier(ClientIdentityCacheServiceImpl(cacheClient))
         databaseSupplier = DatabaseEntitySupplier()
+        configuration = SupplierConfiguration(mockk(), cacheClient)
     }
 
     @AfterTest
     fun onAfter() {
-        stopKoin()
         cacheClient.close()
     }
 
     @Test
     fun `database supplier corresponding to the class`() {
-        assertEquals(DatabaseEntitySupplier::class, EntitySupplier.database::class)
+        assertEquals(DatabaseEntitySupplier::class, EntitySupplyStrategy.database.supply(configuration)::class)
     }
 
     @Test
     fun `cache supplier corresponding to the class`() {
-        assertEquals(CacheEntitySupplier::class, EntitySupplier.cache::class)
+        assertEquals(CacheEntitySupplier::class, EntitySupplyStrategy.cache.supply(configuration)::class)
     }
 
     @Nested
@@ -87,7 +83,7 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cachingDatabase
+            supplier = EntitySupplyStrategy.cachingDatabase.supply(configuration)
         }
 
         @Test
@@ -122,7 +118,7 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cacheWithDatabaseFallback
+            supplier = EntitySupplyStrategy.cacheWithDatabaseFallback.supply(configuration)
         }
 
         @Test
@@ -154,7 +150,7 @@ class EntitySupplierCompanionTest : KoinTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplier.cacheWithCachingDatabaseFallback
+            supplier = EntitySupplyStrategy.cacheWithCachingDatabaseFallback.supply(configuration)
         }
 
         @Test

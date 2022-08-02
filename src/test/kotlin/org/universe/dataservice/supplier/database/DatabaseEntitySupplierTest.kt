@@ -7,8 +7,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
-import org.koin.core.context.stopKoin
-import org.koin.test.KoinTest
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -16,10 +14,13 @@ import org.universe.dataservice.container.createPSQLContainer
 import org.universe.dataservice.data.ClientIdentities
 import org.universe.dataservice.data.ClientIdentity
 import org.universe.dataservice.utils.createIdentity
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @Testcontainers
-class DatabaseEntitySupplierTest : KoinTest {
+class DatabaseEntitySupplierTest {
 
     companion object {
         @JvmStatic
@@ -42,11 +43,6 @@ class DatabaseEntitySupplierTest : KoinTest {
         }
 
         databaseEntitySupplier = DatabaseEntitySupplier()
-    }
-
-    @AfterTest
-    fun onAfter() {
-        stopKoin()
     }
 
     @Nested

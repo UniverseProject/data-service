@@ -1,25 +1,22 @@
 package org.universe.dataservice.data.profileSkin
 
+import io.github.universeproject.ProfileSkin
 import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ProfileSkin
 import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
 import org.universe.dataservice.utils.createProfileSkin
 import org.universe.dataservice.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
-class ProfileSkinCacheServiceImplTest : KoinTest {
+class ProfileSkinCacheServiceImplTest {
 
     companion object {
         @JvmStatic
@@ -29,27 +26,19 @@ class ProfileSkinCacheServiceImplTest : KoinTest {
 
     private lateinit var service: ProfileSkinCacheServiceImpl
 
-    private lateinit var cacheClient: org.universe.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     @BeforeTest
-    fun onBefore() = runBlocking<Unit> {
-        cacheClient = org.universe.dataservice.cache.CacheClient {
+    fun onBefore() = runBlocking {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
-        service = ProfileSkinCacheServiceImpl(getRandomString())
-
-        startKoin {
-            modules(
-                module {
-                    single { cacheClient }
-                })
-        }
+        service = ProfileSkinCacheServiceImpl(cacheClient, getRandomString())
     }
 
     @AfterTest
     fun onAfter() {
         cacheClient.close()
-        stopKoin()
     }
 
     @Nested

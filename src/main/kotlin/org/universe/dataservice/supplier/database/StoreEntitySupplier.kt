@@ -8,7 +8,8 @@ import java.util.*
  *
  * Resolved entities will always be stored in [cache] if it wasn't null or empty for flows.
  */
-public class StoreEntitySupplier(private val cache: CacheEntitySupplier, private val supplier: EntitySupplier) : EntitySupplier {
+public class StoreEntitySupplier(private val cache: CacheEntitySupplier, private val supplier: EntitySupplier) :
+    EntitySupplier {
 
     override suspend fun getIdentityByUUID(uuid: UUID): ClientIdentity? =
         saveIdentityInCache(supplier.getIdentityByUUID(uuid))
