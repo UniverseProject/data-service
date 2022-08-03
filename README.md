@@ -1,5 +1,7 @@
 # DataService
 
+[![Discord](https://img.shields.io/discord/977166213467734056.svg?color=&label=Discord&logo=discord&style=for-the-badge)](https://discord.gg/EQyycAUZtt)
+
 This project allows managing data with the database, cache or other through several services. The goal is that a
 developer no longer needs to manipulate data handlers in his program to store and retrieve data. So he uses a set of
 interface to do the operations he wants.
