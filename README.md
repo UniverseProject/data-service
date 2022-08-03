@@ -11,32 +11,69 @@ coroutines for the I/O operations.
 
 [Gradle](https://gradle.org/) is used to manage dependencies because he's the more friendly with Kotlin.
 
-The project is compiled to [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html), so
-you need this version to use the project.
+The project is compiled to :
 
-## Prerequisites
+- [Java 8](https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html)
 
-- JDK 17 or higher
-
-## Use in your projects
+## Installation
 
 You can find the artifact on [Jitpack](https://jitpack.io/#UniverseProject/DataService).
-Use the version you prefer by following the tutorial on jitpack.
+Use the version you prefer by following the tutorial on jitpack and replacing `{version}` bellow.
 
-For example, if I want the artifact at the commit `0123456789`, I need to declare :
+### Gradle (groovy)
 
-````kotlin
-// gradle.kts
+```groovy
+repositories {
+    mavenCentral()
+  maven {
+    url "https://jitpack.io"
+  }
+}
+```
+
+---
+
+```groovy
+dependencies {
+  implementation("com.github.UniverseProject:DataService:{version}")
+}
+```
+
+### Gradle (kotlin)
+
+```kotlin
 repositories {
   maven { url = uri("https://jitpack.io") }
 }
+```
 
+```kotlin
 dependencies {
-  implementation("com.github.UniverseProject:DataService:0123456789")
+  implementation("com.github.UniverseProject:DataService:{version}")
 }
-````
+```
 
-### Cache
+### Maven
+
+```xml
+<repositories>
+  <!-- This adds the Spigot Maven repository to the build -->
+  <repository>
+    <id>jitpack</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+      <groupId>com.github.UniverseProject</groupId>
+      <artifactId>DataService</artifactId>
+      <version>{version}</version>
+  </dependency>
+</dependencies>
+```
+
+## Cache
 
 The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and
 interaction with cache automatically. You can create an instance like that :
@@ -73,45 +110,74 @@ cacheClient.connect {
 
 **To manage the data in the cache, we recommend using the services**
 
-### Service
+## Service
 
 Several services are available to interact with the database or the cache.
 
-The default implementation of cache services retrieve
-the [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) using the injection
-by [koin](https://github.com/InsertKoinIO/koin). So before use them, you need to register the instance of cache client
-in your application.
-
 ```kotlin
-import org.koin.core.context.startKoin
-import org.koin.dsl.module
+import io.github.universeproject.MojangAPIImpl
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
+import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
+import io.lettuce.core.codec.ByteArrayCodec
+import io.lettuce.core.support.BoundedPoolConfig
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import org.universe.dataservice.cache.CacheClient
-import org.universe.dataservice.data.ClientIdentityCacheService
-import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
-import org.universe.dataservice.data.ClientIdentityService
-import org.universe.dataservice.data.ClientIdentityServiceImpl
+import org.universe.dataservice.data.*
+import org.universe.dataservice.supplier.SupplierConfiguration
 import org.universe.dataservice.supplier.database.EntitySupplier
 import java.util.*
 
-
-suspend fun main() {
-  val cacheClient: CacheClient = createCacheClient()
-  startKoin {
-    modules(
-      module {
-        single { cacheClient }
-      }
-    )
+public suspend fun createCacheClient(): CacheClient {
+  return CacheClient {
+    uri = RedisURI.create("localhost:6379") // required
+    client = RedisClient.create() // optional
+    binaryFormat = ProtoBuf { } // optional
+    codec = ByteArrayCodec.INSTANCE // optional
+    poolConfiguration = BoundedPoolConfig.builder().maxTotal(-1).build() // optional
   }
+}
 
+public fun createHttpClient(): HttpClient {
+  return HttpClient(CIO) {
+    expectSuccess = true
+    install(ContentNegotiation) {
+      json(Json { ignoreUnknownKeys = true })
+    }
+  }
+}
+
+public suspend fun main() {
+  val cacheClient: CacheClient = createCacheClient()
   val uuid = UUID.randomUUID()
-  // cache service
+
+  // Create cache service for client identity data
   val clientIdentityCacheService: ClientIdentityCacheService =
-    ClientIdentityCacheServiceImpl(prefixKey = "c:", cacheByUUID = true, cacheByName = false)
+    ClientIdentityCacheServiceImpl(client = cacheClient, prefixKey = "c:", cacheByUUID = true, cacheByName = false)
+
+  // Get a client identity by its ID from cache
   println(clientIdentityCacheService.getByUUID(uuid))
 
-  // common service (database & cache) according to the supplier
-  val clientIdentityService: ClientIdentityService = ClientIdentityServiceImpl(EntitySupplier.cacheWithCachingDatabaseFallback)
+  val configuration = SupplierConfiguration(
+    mojangAPI = MojangAPIImpl(createHttpClient()),
+    clientIdentityCache = clientIdentityCacheService,
+    profileSkinCache = ProfileSkinCacheServiceImpl(cacheClient, "skin:"),
+    profileIdCache = ProfileIdCacheServiceImpl(client = cacheClient, prefixKey = "profile:"),
+  )
+  // OR
+  // val configuration = SupplierConfiguration(
+  //   mojangAPI = MojangAPIImpl(createHttpClient()),
+  //   cacheClient = cacheClient,
+  // )
+
+  // Common service (database & cache) according to the supplier
+  val strategy: EntitySupplier = EntitySupplier.cacheWithCachingDatabaseFallback(configuration)
+  val clientIdentityService: ClientIdentityService = ClientIdentityServiceImpl(strategy)
+  // Get a client identity by its ID from database and (if found) register it into cache
   println(clientIdentityService.getByUUID(uuid))
 }
 ```
@@ -138,32 +204,23 @@ You can use each type of supplier using the static variable from the
 Using a service, you can change the supplier
 
 ```kotlin
-// Use exclusively the database
-clientIdentityService.withStrategy(EntitySupplier.database)
+import org.universe.dataservice.data.ClientIdentityService
+import org.universe.dataservice.supplier.SupplierConfiguration
+import org.universe.dataservice.supplier.database.EntitySupplier
 
+// ..
+val configuration: SupplierConfiguration = // ..
+val clientIdentityService: ClientIdentityService = // ..
+// Use exclusively the database    
+  clientIdentityService.withStrategy(EntitySupplier.database())
 // Use exclusively the database and cache the result
-clientIdentityService.withStrategy(EntitySupplier.cachingDatabase)
-
-// ...
+clientIdentityService.withStrategy(EntitySupplier.cachingDatabase(configuration))
+// ..
 ```
-
-### Configuration
-
-If you use the default implementation of cache service, it's possible to change some values to set and get information.
-
-| Variables                | Default value | Description                                                                                                                                                                                   |
-|--------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| cache.clientId.prefixKey | cliId:        | Define the prefix key to store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information.                                                            |
-| cache.clientId.useUUID   | true          | Store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information using the uuid. *Storage using uuid should not be enabled if name usage is enabled.* |
-| cache.clientId.useName   | false         | Store the [Client identity](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) information using the name. *Storage using name should not be enabled if name uuid is enabled.*  |
-| cache.skin.prefixKey     | skin:         | Define the prefix key to store the [Profil skin](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt) information.                                                                   |
-| cache.profilId.prefixKey | profId:       | Define the prefix key to store the [Profil Id](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt) information.                                                                       |
-
-The values are retrieved from the properties or the environment variables.
 
 ## Build
 
-To build the project, you need to use the gradle app in the application [gradlew.bat](gradlew.bat) for windows
+To build the project, you need to use the gradle app ([gradlew.bat](gradlew.bat) for windows
 and [gradlew](gradlew) for linux).
 `gradlew` is a wrapper to run gradle command without install it on our computer.
 
