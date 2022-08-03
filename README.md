@@ -24,7 +24,6 @@ Use the version you prefer by following the tutorial on jitpack and replacing `{
 
 ```groovy
 repositories {
-    mavenCentral()
   maven {
     url "https://jitpack.io"
   }
