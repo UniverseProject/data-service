@@ -1,42 +1,29 @@
 package org.universe.dataservice.supplier.http
 
+import io.github.universeproject.MojangAPI
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.bind
-import org.koin.dsl.module
-import org.koin.test.KoinTest
-import org.koin.test.inject
-import org.universe.dataservice.data.MojangAPI
 import org.universe.dataservice.utils.createProfileId
 import org.universe.dataservice.utils.createProfileSkin
 import org.universe.dataservice.utils.getRandomString
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
-class RestEntitySupplierTest : KoinTest {
+class RestEntitySupplierTest {
 
-    private val mojangAPI: MojangAPI by inject()
+    private lateinit var mojangAPI: MojangAPI
     private lateinit var restEntitySupplier: RestEntitySupplier
 
     @BeforeTest
     fun onBefore() {
-        startKoin {
-            modules(
-                module {
-                    single { mockk<MojangAPI>(getRandomString()) } bind MojangAPI::class
-                })
-        }
-        restEntitySupplier = RestEntitySupplier()
-    }
-
-    @AfterTest
-    fun onAfter() {
-        stopKoin()
+        mojangAPI = mockk(getRandomString())
+        restEntitySupplier = RestEntitySupplier(mojangAPI)
     }
 
     interface RestTest {
@@ -50,19 +37,19 @@ class RestEntitySupplierTest : KoinTest {
 
         @Test
         override fun `data not found from rest`() = runBlocking {
-            coEvery { mojangAPI.getId(any()) } returns null
+            coEvery { mojangAPI.getUUID(any<String>()) } returns null
             val id = getRandomString()
-            assertNull(restEntitySupplier.getId(id))
-            coVerify(exactly = 1) { mojangAPI.getId(id) }
+            assertNull(restEntitySupplier.getUUID(id))
+            coVerify(exactly = 1) { mojangAPI.getUUID(id) }
         }
 
         @Test
         override fun `data is retrieved from rest`() = runBlocking {
             val profileId = createProfileId()
             val name = profileId.name
-            coEvery { mojangAPI.getId(name) } returns profileId
-            assertEquals(profileId, restEntitySupplier.getId(name))
-            coVerify(exactly = 1) { mojangAPI.getId(name) }
+            coEvery { mojangAPI.getUUID(name) } returns profileId
+            assertEquals(profileId, restEntitySupplier.getUUID(name))
+            coVerify(exactly = 1) { mojangAPI.getUUID(name) }
         }
 
     }

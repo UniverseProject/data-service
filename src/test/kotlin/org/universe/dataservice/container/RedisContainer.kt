@@ -7,7 +7,7 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy
 class RedisContainer<SELF : RedisContainer<SELF>>(image: String) : GenericContainer<SELF>(image) {
 
     companion object {
-        private val REDIS_PORT = 6379
+        private const val REDIS_PORT = 6379
     }
 
     val url get() = "redis://${host}:${getMappedPort(REDIS_PORT)}/0"

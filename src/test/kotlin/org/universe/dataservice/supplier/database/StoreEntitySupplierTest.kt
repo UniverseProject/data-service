@@ -8,20 +8,17 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.junitpioneer.jupiter.SetSystemProperty
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.container.createRedisContainer
 import org.universe.dataservice.data.ClientIdentity
+import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
 import org.universe.dataservice.utils.createIdentity
 import kotlin.test.*
 
 @Testcontainers
-class StoreEntitySupplierTest : KoinTest {
+class StoreEntitySupplierTest {
 
     companion object {
         @JvmStatic
@@ -29,37 +26,44 @@ class StoreEntitySupplierTest : KoinTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: org.universe.dataservice.cache.CacheClient
-
-    private lateinit var storeEntitySupplier: StoreEntitySupplier
+    private lateinit var cacheClient: CacheClient
     private lateinit var mockSupplier: EntitySupplier
-    private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
     @BeforeTest
-    fun onBefore() = runBlocking {
-        cacheClient = org.universe.dataservice.cache.CacheClient {
+    fun onBefore(): Unit = runBlocking {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
-
-        startKoin {
-            modules(
-                module {
-                    single { cacheClient }
-                })
-        }
         mockSupplier = mockk()
-        storeEntitySupplier = StoreEntitySupplier(mockSupplier)
-        // Use to verify if data is inserted
-        cacheEntitySupplier = CacheEntitySupplier()
     }
 
     @AfterTest
     fun onAfter() {
-        stopKoin()
         cacheClient.close()
     }
 
     abstract inner class StoreTest {
+
+        private lateinit var cacheEntitySupplier: CacheEntitySupplier
+
+        abstract fun useName(): Boolean
+
+        abstract fun useUUID(): Boolean
+
+        private lateinit var storeEntitySupplier: StoreEntitySupplier
+
+        @BeforeTest
+        fun onBefore() {
+            cacheEntitySupplier = CacheEntitySupplier(
+                ClientIdentityCacheServiceImpl(
+                    cacheClient,
+                    cacheByUUID = useUUID(),
+                    cacheByName = useName()
+                )
+            )
+
+            storeEntitySupplier = StoreEntitySupplier(cacheEntitySupplier, mockSupplier)
+        }
 
         @Test
         fun `data not stored into cache if data not exists`() = runBlocking {
@@ -84,9 +88,11 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by uuid")
-    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
     inner class GetIdentityByUUID : StoreTest() {
+
+        override fun useName(): Boolean = false
+
+        override fun useUUID(): Boolean = true
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
             return supplier.getIdentityByUUID(id.uuid)
@@ -100,9 +106,11 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Get identity by name")
-    @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-    @SetSystemProperty(key = "cache.clientId.useName", value = "true")
     inner class GetIdentityByName : StoreTest() {
+
+        override fun useName(): Boolean = true
+
+        override fun useUUID(): Boolean = false
 
         override suspend fun getIdentity(supplier: EntitySupplier, id: ClientIdentity): ClientIdentity? {
             return supplier.getIdentityByName(id.name)
@@ -116,8 +124,6 @@ class StoreEntitySupplierTest : KoinTest {
 
     @Nested
     @DisplayName("Save identity")
-    @SetSystemProperty(key = "cache.clientId.useUUID", value = "true")
-    @SetSystemProperty(key = "cache.clientId.useName", value = "false")
     inner class SaveIdentity {
 
         @Test
@@ -125,6 +131,15 @@ class StoreEntitySupplierTest : KoinTest {
             val id = createIdentity()
             val uuid = id.uuid
             coJustRun { mockSupplier.saveIdentity(id) }
+
+            val cacheIdentityCacheService =
+                ClientIdentityCacheServiceImpl(cacheClient, cacheByUUID = true, cacheByName = false)
+            val storeEntitySupplier = StoreEntitySupplier(
+                CacheEntitySupplier(cacheIdentityCacheService),
+                mockSupplier
+            )
+            // Use to verify if data is inserted
+            val cacheEntitySupplier = CacheEntitySupplier(cacheIdentityCacheService)
             storeEntitySupplier.saveIdentity(id)
 
             assertNull(cacheEntitySupplier.getIdentityByUUID(uuid))

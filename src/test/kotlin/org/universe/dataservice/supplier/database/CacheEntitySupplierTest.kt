@@ -6,17 +6,13 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
-import org.junitpioneer.jupiter.SetSystemProperty
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import org.koin.test.KoinTest
+import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.data.ClientIdentityCacheService
 import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
 import org.universe.dataservice.utils.createIdentity
 import kotlin.test.*
 
-class CacheEntitySupplierTest : KoinTest {
+class CacheEntitySupplierTest {
 
     private lateinit var cacheEntitySupplier: CacheEntitySupplier
 
@@ -29,41 +25,18 @@ class CacheEntitySupplierTest : KoinTest {
     }
 
     @Nested
-    inner class DefaultParameter : KoinTest {
+    inner class DefaultParameter {
+
+        private lateinit var cacheClient: CacheClient
 
         @BeforeTest
         fun onBefore() {
-            startKoin {
-                modules(
-                    module {
-                        single {
-                            mockk<org.universe.dataservice.cache.CacheClient>()
-                        }
-                    })
-            }
-        }
-
-        @AfterTest
-        fun onAfter() {
-            stopKoin()
-        }
-
-        @SetSystemProperty(key = "cache.clientId.prefixKey", value = "test:")
-        @SetSystemProperty(key = "cache.clientId.useUUID", value = "false")
-        @SetSystemProperty(key = "cache.clientId.useName", value = "true")
-        @Test
-        fun `default implementation use environment variable`() {
-            val supplier = CacheEntitySupplier()
-            val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
-            assertEquals("test:", service.prefixKey)
-            assertFalse { service.cacheByUUID }
-            assertTrue { service.cacheByName }
+            cacheClient = mockk()
         }
 
         @Test
         fun `default values`() {
-            val supplier = CacheEntitySupplier()
-            val service = supplier.clientIdentityCache as ClientIdentityCacheServiceImpl
+            val service = ClientIdentityCacheServiceImpl(cacheClient)
             assertEquals("cliId:", service.prefixKey)
             assertTrue { service.cacheByUUID }
             assertFalse { service.cacheByName }

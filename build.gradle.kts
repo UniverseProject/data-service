@@ -21,7 +21,6 @@ repositories {
 
 val kotlinVersion: String by project
 val kotlinCoroutineReactiveVersion: String by project
-val koinVersion: String by project
 val ktorVersion: String by project
 val ktSerializationVersion: String by project
 val exposedVersion: String by project
@@ -30,11 +29,10 @@ val loggingVersion: String by project
 val slf4jVersion: String by project
 val mockkVersion: String by project
 val junitVersion: String by project
-val junitPioneerVersion: String by project
 val testContainersVersion: String by project
 val psqlVersion: String by project
-val konfVersion: String by project
 val lettuceVersion: String by project
+val kotlinMojangApi: String by project
 
 dependencies {
     implementation(kotlin("stdlib"))
@@ -42,15 +40,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutineReactiveVersion")
 
-    // Koin for inject instance
-    implementation("io.insert-koin:koin-core:$koinVersion")
-    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
-    testImplementation("io.insert-koin:koin-test:$koinVersion") {
-        // Problem with koin and junit
-        // There is a conflict between the dependencies of both
-        // So the solution is : Exclude the junit dependencies
-        exclude("org.jetbrains.kotlin", "kotlin-test-junit")
-    }
+    implementation("io.github.universeproject:kotlin-mojang-api-jvm:$kotlinMojangApi")
 
     // Ktor to interact with external API through HTTP
     implementation("io.ktor:ktor-client-core:$ktorVersion")
@@ -83,7 +73,6 @@ dependencies {
     // Junit to run tests
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-    testImplementation("org.junit-pioneer:junit-pioneer:$junitPioneerVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 }
@@ -107,7 +96,7 @@ tasks {
     }
 
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+        kotlinOptions.jvmTarget = "1.8"
     }
 
     val dokkaOutputDir = "${rootProject.projectDir}/dokka"
@@ -134,7 +123,7 @@ val javadocJar by tasks.registering(Jar::class) {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>(project.name) {
             from(components["kotlin"])
             groupId = project.properties["group"] as? String? ?: "org.universe"
             artifactId = project.name

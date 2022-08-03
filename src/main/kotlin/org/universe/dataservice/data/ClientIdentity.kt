@@ -1,11 +1,12 @@
+@file:OptIn(ExperimentalLettuceCoroutinesApi::class)
+
 package org.universe.dataservice.data
 
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.universe.dataservice.cache.CacheClient
 import org.universe.dataservice.cache.CacheService
 import org.universe.dataservice.serializer.UUIDSerializer
@@ -32,7 +33,7 @@ public object ClientIdentities : Table(ClientIdentity::class.simpleName!!) {
  * @property uuid Player's UUID.
  * @property name Player's name.
  */
-@Serializable
+@kotlinx.serialization.Serializable
 public data class ClientIdentity(
     @Serializable(with = UUIDSerializer::class)
     var uuid: UUID,
@@ -72,12 +73,11 @@ public interface ClientIdentityCacheService {
  * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
  */
 public class ClientIdentityCacheServiceImpl(
-    prefixKey: String,
-    public val cacheByUUID: Boolean,
-    public val cacheByName: Boolean
-) : CacheService(prefixKey), KoinComponent, ClientIdentityCacheService {
-
-    public val client: CacheClient by inject()
+    public val client: CacheClient,
+    prefixKey: String = "cliId:",
+    public val cacheByUUID: Boolean = true,
+    public val cacheByName: Boolean = false
+) : CacheService(prefixKey), ClientIdentityCacheService {
 
     override suspend fun getByUUID(uuid: UUID): ClientIdentity? {
         if (!cacheByUUID) {
