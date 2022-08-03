@@ -58,13 +58,13 @@ class EntitySupplierStrategyTest {
     @Test
     fun `rest supplier corresponding to the class`() {
         val configuration = SupplierConfiguration(mockk(), mockk())
-        assertEquals(RestEntitySupplier::class, EntitySupplyStrategy.rest.supply(configuration)::class)
+        assertEquals(RestEntitySupplier::class, EntitySupplier.rest(configuration)::class)
     }
 
     @Test
     fun `cache supplier corresponding to the class`() {
         val configuration = SupplierConfiguration(mockk(), mockk())
-        assertEquals(CacheEntitySupplier::class, EntitySupplyStrategy.cache.supply(configuration)::class)
+        assertEquals(CacheEntitySupplier::class, EntitySupplier.cache(configuration)::class)
     }
 
     @Nested
@@ -75,7 +75,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cachingRest.supply(configuration)
+            supplier = EntitySupplier.cachingRest(configuration)
         }
 
         @Test
@@ -108,7 +108,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cacheWithRestFallback.supply(configuration)
+            supplier = EntitySupplier.cacheWithRestFallback(configuration)
         }
 
         @Test
@@ -141,7 +141,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cacheWithCachingRestFallback.supply(configuration)
+            supplier = EntitySupplier.cacheWithCachingRestFallback(configuration)
         }
 
         @Test

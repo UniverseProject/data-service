@@ -96,7 +96,7 @@ tasks {
     }
 
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+        kotlinOptions.jvmTarget = "1.8"
     }
 
     val dokkaOutputDir = "${rootProject.projectDir}/dokka"
@@ -123,7 +123,7 @@ val javadocJar by tasks.registering(Jar::class) {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>(project.name) {
             from(components["kotlin"])
             groupId = project.properties["group"] as? String? ?: "org.universe"
             artifactId = project.name

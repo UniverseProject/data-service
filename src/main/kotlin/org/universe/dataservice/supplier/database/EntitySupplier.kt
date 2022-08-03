@@ -1,6 +1,7 @@
 package org.universe.dataservice.supplier.database
 
 import org.universe.dataservice.data.ClientIdentity
+import org.universe.dataservice.supplier.SupplierConfiguration
 import java.util.*
 
 /**
@@ -10,6 +11,47 @@ import java.util.*
  * @see CacheEntitySupplier
  */
 public interface EntitySupplier {
+
+    public companion object {
+
+        /**
+         * A supplier providing a strategy which exclusively uses database calls to fetch entities.
+         * See [DatabaseEntitySupplier] for more details.
+         */
+        public fun database(): DatabaseEntitySupplier = DatabaseEntitySupplier()
+
+        /**
+         * A supplier providing a strategy which exclusively uses cache to fetch entities.
+         * See [CacheEntitySupplier] for more details.
+         */
+        public fun cache(configuration: SupplierConfiguration): CacheEntitySupplier =
+            CacheEntitySupplier(configuration.clientIdentityCache)
+
+        /**
+         * A supplier providing a strategy which exclusively uses database calls to fetch entities.
+         * fetched entities are stored in [cache].
+         * See [StoreEntitySupplier] for more details.
+         */
+        public fun cachingDatabase(configuration: SupplierConfiguration): StoreEntitySupplier =
+            StoreEntitySupplier(cache(configuration), database())
+
+        /**
+         * A supplier providing a strategy which will first operate on the [cache] supplier. When an entity
+         * is not present from cache it will be fetched from [database] instead. Operations that return flows
+         * will only fall back to rest when the returned flow contained no elements.
+         */
+        public fun cacheWithDatabaseFallback(configuration: SupplierConfiguration): EntitySupplier =
+            cache(configuration) withFallback database()
+
+        /**
+         * A supplier providing a strategy which will first operate on the [cache] supplier. When an entity
+         * is not present from cache it will be fetched from [cachingDatabase] instead which will update [cache] with fetched elements.
+         * Operations that return flows will only fall back to rest when the returned flow contained no elements.
+         */
+        public fun cacheWithCachingDatabaseFallback(configuration: SupplierConfiguration): EntitySupplier =
+            cache(configuration) withFallback cachingDatabase(configuration)
+
+    }
 
     /**
      * Get the identity of a client from his [ClientIdentity.uuid].

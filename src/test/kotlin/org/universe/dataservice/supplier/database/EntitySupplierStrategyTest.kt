@@ -67,12 +67,12 @@ class EntitySupplierStrategyTest {
 
     @Test
     fun `database supplier corresponding to the class`() {
-        assertEquals(DatabaseEntitySupplier::class, EntitySupplyStrategy.database.supply(configuration)::class)
+        assertEquals(DatabaseEntitySupplier::class, EntitySupplier.database()::class)
     }
 
     @Test
     fun `cache supplier corresponding to the class`() {
-        assertEquals(CacheEntitySupplier::class, EntitySupplyStrategy.cache.supply(configuration)::class)
+        assertEquals(CacheEntitySupplier::class, EntitySupplier.cache(configuration)::class)
     }
 
     @Nested
@@ -83,7 +83,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cachingDatabase.supply(configuration)
+            supplier = EntitySupplier.cachingDatabase(configuration)
         }
 
         @Test
@@ -118,7 +118,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cacheWithDatabaseFallback.supply(configuration)
+            supplier = EntitySupplier.cacheWithDatabaseFallback(configuration)
         }
 
         @Test
@@ -150,7 +150,7 @@ class EntitySupplierStrategyTest {
 
         @BeforeTest
         fun onBefore() {
-            supplier = EntitySupplyStrategy.cacheWithCachingDatabaseFallback.supply(configuration)
+            supplier = EntitySupplier.cacheWithCachingDatabaseFallback(configuration)
         }
 
         @Test
