@@ -57,7 +57,6 @@ dependencies {
 
 ```xml
 <repositories>
-  <!-- This adds the Spigot Maven repository to the build -->
   <repository>
     <id>jitpack</id>
     <url>https://jitpack.io</url>
