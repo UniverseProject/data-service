@@ -1,4 +1,4 @@
-# DataService
+# data-service
 
 [![Discord](https://img.shields.io/discord/977166213467734056.svg?color=&label=Discord&logo=discord&style=for-the-badge)](https://discord.gg/EQyycAUZtt)
 
@@ -19,7 +19,7 @@ The project is compiled to :
 
 ## Installation
 
-You can find the artifact on [Jitpack](https://jitpack.io/#UniverseProject/DataService).
+You can find the artifact on [Jitpack](https://jitpack.io/#UniverseProject/data-service).
 Use the version you prefer by following the tutorial on jitpack and replacing `{version}` bellow.
 
 ### Gradle (groovy)
@@ -36,7 +36,7 @@ repositories {
 
 ```groovy
 dependencies {
-  implementation("com.github.UniverseProject:DataService:{version}")
+  implementation("com.github.UniverseProject:data-service:{version}")
 }
 ```
 
@@ -50,7 +50,7 @@ repositories {
 
 ```kotlin
 dependencies {
-  implementation("com.github.UniverseProject:DataService:{version}")
+  implementation("com.github.UniverseProject:data-service:{version}")
 }
 ```
 
@@ -67,7 +67,7 @@ dependencies {
 <dependencies>
   <dependency>
       <groupId>com.github.UniverseProject</groupId>
-      <artifactId>DataService</artifactId>
+      <artifactId>data-service</artifactId>
       <version>{version}</version>
   </dependency>
 </dependencies>
