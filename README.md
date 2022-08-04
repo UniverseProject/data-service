@@ -75,7 +75,7 @@ dependencies {
 
 ## Cache
 
-The [Cache client](src/main/kotlin/org/universe/dataservice/cache/CacheClient.kt) allows managing connection and
+The [Cache client](src/main/kotlin/io/github/universeproject/dataservice/cache/CacheClient.kt) allows managing connection and
 interaction with cache automatically. You can create an instance like that :
 
 ```kotlin
@@ -84,7 +84,7 @@ import io.lettuce.core.RedisURI
 import io.lettuce.core.codec.ByteArrayCodec
 import io.lettuce.core.support.BoundedPoolConfig
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.universe.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.cache.CacheClient
 
 suspend fun createCacheClient(): CacheClient {
     return CacheClient {
@@ -126,10 +126,10 @@ import io.lettuce.core.codec.ByteArrayCodec
 import io.lettuce.core.support.BoundedPoolConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.universe.dataservice.cache.CacheClient
-import org.universe.dataservice.data.*
-import org.universe.dataservice.supplier.SupplierConfiguration
-import org.universe.dataservice.supplier.database.EntitySupplier
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.data.*
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.supplier.database.EntitySupplier
 import java.util.*
 
 public suspend fun createCacheClient(): CacheClient {
@@ -184,29 +184,29 @@ public suspend fun main() {
 
 Here a list of service usable :
 
-| Service                                                                                      | Import                          |
-|----------------------------------------------------------------------------------------------|---------------------------------|
-| [ClientIdentityServiceImpl](src/main/kotlin/org/universe/dataservice/data/ClientIdentity.kt) | org.universe.dataservice.data.* |
-| [ProfileIdServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileId.kt)           | org.universe.dataservice.data.* |
-| [ProfileSkinServiceImpl](src/main/kotlin/org/universe/dataservice/data/ProfileSkin.kt)       | org.universe.dataservice.data.* |
+| Service                                                                                                   | Import                                       |
+|-----------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| [ClientIdentityServiceImpl](src/main/kotlin/io/github/universeproject/dataservice/data/ClientIdentity.kt) | io.github.universeproject.dataservice.data.* |
+| [ProfileIdServiceImpl](src/main/kotlin/io/github/universeproject/dataservice/data/ProfileId.kt)           | io.github.universeproject.dataservice.data.* |
+| [ProfileSkinServiceImpl](src/main/kotlin/io/github/universeproject/dataservice/data/ProfileSkin.kt)       | io.github.universeproject.dataservice.data.* |
 
 ### Supplier
 
 The suppliers allow defining behavior when you interact with a data.
 
-- [Supplier for database](src/main/kotlin/org/universe/dataservice/supplier/database)
-- [Supplier for http](src/main/kotlin/org/universe/dataservice/supplier/http)
+- [Supplier for database](src/main/kotlin/io/github/universeproject/dataservice/supplier/database)
+- [Supplier for http](src/main/kotlin/io/github/universeproject/dataservice/supplier/http)
 
 You can use each type of supplier using the static variable from the
-[EntitySupplier database](src/main/kotlin/org/universe/dataservice/supplier/database/EntitySupplier.kt) and
-[EntitySupplier http](src/main/kotlin/org/universe/dataservice/supplier/http/EntitySupplier.kt).
+[EntitySupplier database](src/main/kotlin/io/github/universeproject/dataservice/supplier/database/EntitySupplier.kt) and
+[EntitySupplier http](src/main/kotlin/io/github/universeproject/dataservice/supplier/http/EntitySupplier.kt).
 
 Using a service, you can change the supplier
 
 ```kotlin
-import org.universe.dataservice.data.ClientIdentityService
-import org.universe.dataservice.supplier.SupplierConfiguration
-import org.universe.dataservice.supplier.database.EntitySupplier
+import io.github.universeproject.dataservice.data.ClientIdentityService
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.supplier.database.EntitySupplier
 
 // ..
 val configuration: SupplierConfiguration = // ..
