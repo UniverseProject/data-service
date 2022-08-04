@@ -88,7 +88,7 @@ import io.github.universeproject.dataservice.cache.CacheClient
 
 suspend fun createCacheClient(): CacheClient {
     return CacheClient {
-        uri = RedisURI.create("my redis url") // required
+        uri = RedisURI.create("localhost:6379") // required
         client = RedisClient.create() // optional
         binaryFormat = ProtoBuf { } // optional
         codec = ByteArrayCodec.INSTANCE // optional
