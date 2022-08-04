@@ -1,8 +1,7 @@
 package io.github.universeproject.dataservice.supplier.database
 
-import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.data.ClientIdentityCacheService
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.data.ClientIdentityCacheService
 import java.util.*
 
 /**

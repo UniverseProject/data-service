@@ -2,16 +2,16 @@
 
 package io.github.universeproject.dataservice.data
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.cache.CacheService
+import io.github.universeproject.dataservice.serializer.UUIDSerializer
+import io.github.universeproject.dataservice.supplier.database.EntitySupplier
+import io.github.universeproject.dataservice.supplier.database.Strategizable
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.serializer.UUIDSerializer
-import org.universe.dataservice.supplier.database.EntitySupplier
-import org.universe.dataservice.supplier.database.Strategizable
 import java.util.*
 
 /**
@@ -73,7 +73,7 @@ public interface ClientIdentityCacheService {
  * @property cacheByName `true` if the data should be stored by the [name][ClientIdentity.name].
  */
 public class ClientIdentityCacheServiceImpl(
-    public val client: io.github.universeproject.dataservice.cache.CacheClient,
+    public val client: CacheClient,
     prefixKey: String = "cliId:",
     public val cacheByUUID: Boolean = true,
     public val cacheByName: Boolean = false

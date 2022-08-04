@@ -1,5 +1,14 @@
+@file:OptIn(ExperimentalLettuceCoroutinesApi::class)
+
 package io.github.universeproject.dataservice.data.clientIdentity
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.container.createRedisContainer
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.data.ClientIdentityCacheServiceImpl
+import io.github.universeproject.dataservice.utils.createIdentity
+import io.github.universeproject.dataservice.utils.getRandomString
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
@@ -7,12 +16,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
-import org.universe.dataservice.utils.createIdentity
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
@@ -26,11 +29,11 @@ class ClientIdentityCacheServiceImplTest {
 
     private lateinit var service: ClientIdentityCacheServiceImpl
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = io.github.universeproject.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
     }

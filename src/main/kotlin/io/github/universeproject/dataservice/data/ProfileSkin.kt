@@ -3,11 +3,11 @@
 package io.github.universeproject.dataservice.data
 
 import io.github.universeproject.ProfileSkin
-import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.supplier.http.EntitySupplier
-import org.universe.dataservice.supplier.http.Strategizable
+import io.github.universeproject.dataservice.cache.CacheService
+import io.github.universeproject.dataservice.supplier.http.EntitySupplier
+import io.github.universeproject.dataservice.supplier.http.Strategizable
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 
 public interface ProfileSkinCacheService {
     /**
@@ -30,7 +30,7 @@ public interface ProfileSkinCacheService {
  * @property prefixKey Prefix key to identify the data in cache.
  */
 public class ProfileSkinCacheServiceImpl(
-    private val client: io.github.universeproject.dataservice.cache.CacheClient,
+    private val client: CacheClient,
     prefixKey: String = "skin:"
 ) : CacheService(prefixKey), ProfileSkinCacheService {
 

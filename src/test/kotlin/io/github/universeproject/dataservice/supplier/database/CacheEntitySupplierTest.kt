@@ -1,15 +1,15 @@
 package io.github.universeproject.dataservice.supplier.database
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.data.ClientIdentityCacheService
+import io.github.universeproject.dataservice.data.ClientIdentityCacheServiceImpl
+import io.github.universeproject.dataservice.utils.createIdentity
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.data.ClientIdentityCacheService
-import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
-import org.universe.dataservice.utils.createIdentity
 import kotlin.test.*
 
 class CacheEntitySupplierTest {
@@ -27,7 +27,7 @@ class CacheEntitySupplierTest {
     @Nested
     inner class DefaultParameter {
 
-        private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+        private lateinit var cacheClient: CacheClient
 
         @BeforeTest
         fun onBefore() {

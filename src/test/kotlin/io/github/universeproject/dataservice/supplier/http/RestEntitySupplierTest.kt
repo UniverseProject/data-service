@@ -1,15 +1,15 @@
 package io.github.universeproject.dataservice.supplier.http
 
 import io.github.universeproject.MojangAPI
+import io.github.universeproject.dataservice.utils.createProfileId
+import io.github.universeproject.dataservice.utils.createProfileSkin
+import io.github.universeproject.dataservice.utils.getRandomString
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.universe.dataservice.utils.createProfileId
-import org.universe.dataservice.utils.createProfileSkin
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

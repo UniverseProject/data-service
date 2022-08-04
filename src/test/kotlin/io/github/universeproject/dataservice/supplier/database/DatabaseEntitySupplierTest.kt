@@ -1,5 +1,9 @@
 package io.github.universeproject.dataservice.supplier.database
 
+import io.github.universeproject.dataservice.container.createPSQLContainer
+import io.github.universeproject.dataservice.data.ClientIdentities
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.utils.createIdentity
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -10,10 +14,6 @@ import org.junit.jupiter.api.assertThrows
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.universe.dataservice.container.createPSQLContainer
-import org.universe.dataservice.data.ClientIdentities
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.utils.createIdentity
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

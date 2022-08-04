@@ -2,8 +2,8 @@ package io.github.universeproject.dataservice.data
 
 import io.github.universeproject.ProfileId
 import io.github.universeproject.ProfileSkin
-import org.universe.dataservice.supplier.http.EntitySupplier
-import org.universe.dataservice.supplier.http.Strategizable
+import io.github.universeproject.dataservice.supplier.http.EntitySupplier
+import io.github.universeproject.dataservice.supplier.http.Strategizable
 
 /**
  * Service to retrieve data about players.

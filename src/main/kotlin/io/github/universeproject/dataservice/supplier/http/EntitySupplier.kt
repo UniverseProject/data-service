@@ -2,7 +2,7 @@ package io.github.universeproject.dataservice.supplier.http
 
 import io.github.universeproject.ProfileId
 import io.github.universeproject.ProfileSkin
-import org.universe.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
 
 /**
  * An abstraction that allows for requesting entities.

@@ -1,5 +1,12 @@
 package io.github.universeproject.dataservice.supplier.database
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.container.createPSQLContainer
+import io.github.universeproject.dataservice.container.createRedisContainer
+import io.github.universeproject.dataservice.data.ClientIdentities
+import io.github.universeproject.dataservice.data.ClientIdentityCacheServiceImpl
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.utils.createIdentity
 import io.lettuce.core.RedisURI
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -11,13 +18,6 @@ import org.junit.jupiter.api.Nested
 import org.postgresql.Driver
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.container.createPSQLContainer
-import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ClientIdentities
-import org.universe.dataservice.data.ClientIdentityCacheServiceImpl
-import org.universe.dataservice.supplier.SupplierConfiguration
-import org.universe.dataservice.utils.createIdentity
 import kotlin.test.*
 
 @Testcontainers
@@ -33,7 +33,7 @@ class EntitySupplierStrategyTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var configuration: SupplierConfiguration
 
@@ -42,7 +42,7 @@ class EntitySupplierStrategyTest {
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = io.github.universeproject.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
         Database.connect(

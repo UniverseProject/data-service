@@ -2,9 +2,8 @@ package io.github.universeproject.dataservice.supplier.http
 
 import io.github.universeproject.ProfileId
 import io.github.universeproject.ProfileSkin
-import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.data.ProfileIdCacheService
-import org.universe.dataservice.data.ProfileSkinCacheService
+import io.github.universeproject.dataservice.data.ProfileIdCacheService
+import io.github.universeproject.dataservice.data.ProfileSkinCacheService
 
 /**
  * [EntitySupplier] that uses [CacheService] to resolve entities.

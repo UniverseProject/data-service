@@ -3,12 +3,12 @@
 package io.github.universeproject.dataservice.data
 
 import io.github.universeproject.ProfileId
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.cache.CacheService
+import io.github.universeproject.dataservice.supplier.http.EntitySupplier
+import io.github.universeproject.dataservice.supplier.http.Strategizable
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import kotlinx.serialization.builtins.serializer
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.cache.CacheService
-import org.universe.dataservice.supplier.http.EntitySupplier
-import org.universe.dataservice.supplier.http.Strategizable
 
 /**
  * Service to manage [ProfileId] data in cache.
@@ -34,7 +34,7 @@ public interface ProfileIdCacheService {
  * @property prefixKey Prefix key to identify the data in cache.
  */
 public class ProfileIdCacheServiceImpl(
-    public val client: io.github.universeproject.dataservice.cache.CacheClient,
+    public val client: CacheClient,
     prefixKey: String = "profId:"
 ) : CacheService(prefixKey), ProfileIdCacheService {
 

@@ -1,6 +1,14 @@
+@file:OptIn(ExperimentalLettuceCoroutinesApi::class)
+
 package io.github.universeproject.dataservice.data.profileSkin
 
 import io.github.universeproject.ProfileSkin
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.container.createRedisContainer
+import io.github.universeproject.dataservice.data.ProfileSkinCacheServiceImpl
+import io.github.universeproject.dataservice.utils.createProfileSkin
+import io.github.universeproject.dataservice.utils.getRandomString
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisURI
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
@@ -8,11 +16,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
-import org.universe.dataservice.utils.createProfileSkin
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
@@ -26,11 +29,11 @@ class ProfileSkinCacheServiceImplTest {
 
     private lateinit var service: ProfileSkinCacheServiceImpl
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = io.github.universeproject.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
         service = ProfileSkinCacheServiceImpl(cacheClient, getRandomString())

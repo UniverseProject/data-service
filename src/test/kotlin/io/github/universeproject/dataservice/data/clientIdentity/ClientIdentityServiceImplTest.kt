@@ -1,5 +1,9 @@
 package io.github.universeproject.dataservice.data.clientIdentity
 
+import io.github.universeproject.dataservice.data.ClientIdentityServiceImpl
+import io.github.universeproject.dataservice.supplier.database.EntitySupplier
+import io.github.universeproject.dataservice.utils.createIdentity
+import io.github.universeproject.dataservice.utils.getRandomString
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
@@ -8,10 +12,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.universe.dataservice.data.ClientIdentityServiceImpl
-import org.universe.dataservice.supplier.database.EntitySupplier
-import org.universe.dataservice.utils.createIdentity
-import org.universe.dataservice.utils.getRandomString
 import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals

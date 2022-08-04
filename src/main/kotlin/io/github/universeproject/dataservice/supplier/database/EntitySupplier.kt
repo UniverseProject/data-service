@@ -1,7 +1,7 @@
 package io.github.universeproject.dataservice.supplier.database
 
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
 import java.util.*
 
 /**

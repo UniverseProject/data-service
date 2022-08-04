@@ -2,8 +2,8 @@ package io.github.universeproject.dataservice.utils
 
 import io.github.universeproject.ProfileId
 import io.github.universeproject.ProfileSkin
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.data.MAX_NAME_LENGTH
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.data.MAX_NAME_LENGTH
 import java.util.*
 
 val stringGenerator = generateSequence { UUID.randomUUID().toString() }.distinct().iterator()

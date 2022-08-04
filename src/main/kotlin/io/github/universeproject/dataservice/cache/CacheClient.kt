@@ -1,7 +1,8 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalLettuceCoroutinesApi::class)
 
 package io.github.universeproject.dataservice.cache
 
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection
@@ -32,8 +33,8 @@ public class CacheClient(
 ) : AutoCloseable {
 
     public companion object {
-        public suspend inline operator fun invoke(builder: io.github.universeproject.dataservice.cache.CacheClient.Builder.() -> Unit): io.github.universeproject.dataservice.cache.CacheClient =
-            io.github.universeproject.dataservice.cache.CacheClient.Builder().apply(builder).build()
+        public suspend inline operator fun invoke(builder: Builder.() -> Unit): CacheClient =
+            Builder().apply(builder).build()
     }
 
     public object Default {
@@ -63,20 +64,20 @@ public class CacheClient(
         public lateinit var uri: RedisURI
         public var client: RedisClient? = null
         public var binaryFormat: BinaryFormat =
-            io.github.universeproject.dataservice.cache.CacheClient.Default.binaryFormat
+            CacheClient.Default.binaryFormat
         public var codec: RedisCodec<ByteArray, ByteArray> =
-            io.github.universeproject.dataservice.cache.CacheClient.Default.codec
+            CacheClient.Default.codec
         public var poolConfiguration: BoundedPoolConfig? = null
 
         /**
          * Build the instance of [CacheClient] with the values defined in builder.
          * @return A new instance.
          */
-        public suspend fun build(): io.github.universeproject.dataservice.cache.CacheClient {
+        public suspend fun build(): CacheClient {
             val redisClient: RedisClient = client ?: RedisClient.create()
             val codec: RedisCodec<ByteArray, ByteArray> = this.codec
 
-            return io.github.universeproject.dataservice.cache.CacheClient(
+            return CacheClient(
                 uri = uri,
                 client = redisClient,
                 binaryFormat = binaryFormat,

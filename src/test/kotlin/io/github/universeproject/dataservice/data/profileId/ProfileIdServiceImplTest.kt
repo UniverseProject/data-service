@@ -1,5 +1,9 @@
 package io.github.universeproject.dataservice.data.profileId
 
+import io.github.universeproject.dataservice.data.ProfileIdServiceImpl
+import io.github.universeproject.dataservice.supplier.http.EntitySupplier
+import io.github.universeproject.dataservice.utils.createProfileId
+import io.github.universeproject.dataservice.utils.getRandomString
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -7,10 +11,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.universe.dataservice.data.ProfileIdServiceImpl
-import org.universe.dataservice.supplier.http.EntitySupplier
-import org.universe.dataservice.utils.createProfileId
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

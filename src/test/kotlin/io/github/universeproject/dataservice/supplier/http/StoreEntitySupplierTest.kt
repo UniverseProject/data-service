@@ -1,5 +1,11 @@
 package io.github.universeproject.dataservice.supplier.http
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.container.createRedisContainer
+import io.github.universeproject.dataservice.data.ProfileIdCacheServiceImpl
+import io.github.universeproject.dataservice.data.ProfileSkinCacheServiceImpl
+import io.github.universeproject.dataservice.utils.createProfileId
+import io.github.universeproject.dataservice.utils.createProfileSkin
 import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -8,12 +14,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ProfileIdCacheServiceImpl
-import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
-import org.universe.dataservice.utils.createProfileId
-import org.universe.dataservice.utils.createProfileSkin
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +28,7 @@ class StoreEntitySupplierTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var storeEntitySupplier: StoreEntitySupplier
     private lateinit var mockSupplier: EntitySupplier
@@ -36,7 +36,7 @@ class StoreEntitySupplierTest {
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = io.github.universeproject.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
 

@@ -1,25 +1,25 @@
 package io.github.universeproject.dataservice.supplier.http
 
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.data.ProfileIdCacheService
+import io.github.universeproject.dataservice.data.ProfileIdCacheServiceImpl
+import io.github.universeproject.dataservice.data.ProfileSkinCacheService
+import io.github.universeproject.dataservice.data.ProfileSkinCacheServiceImpl
+import io.github.universeproject.dataservice.utils.createProfileId
+import io.github.universeproject.dataservice.utils.createProfileSkin
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Nested
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.data.ProfileIdCacheService
-import org.universe.dataservice.data.ProfileIdCacheServiceImpl
-import org.universe.dataservice.data.ProfileSkinCacheService
-import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
-import org.universe.dataservice.utils.createProfileId
-import org.universe.dataservice.utils.createProfileSkin
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class CacheEntitySupplierTest {
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     @BeforeTest
     fun onBefore() {

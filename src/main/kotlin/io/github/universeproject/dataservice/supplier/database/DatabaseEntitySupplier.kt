@@ -1,10 +1,10 @@
 package io.github.universeproject.dataservice.supplier.database
 
+import io.github.universeproject.dataservice.data.ClientIdentities
+import io.github.universeproject.dataservice.data.ClientIdentity
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.universe.dataservice.data.ClientIdentities
-import org.universe.dataservice.data.ClientIdentity
 import java.util.*
 
 /**

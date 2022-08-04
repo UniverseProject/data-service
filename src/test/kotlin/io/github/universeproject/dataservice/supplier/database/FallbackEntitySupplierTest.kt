@@ -1,12 +1,12 @@
 package io.github.universeproject.dataservice.supplier.database
 
+import io.github.universeproject.dataservice.data.ClientIdentity
+import io.github.universeproject.dataservice.utils.createIdentity
+import io.github.universeproject.dataservice.utils.getRandomString
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.universe.dataservice.data.ClientIdentity
-import org.universe.dataservice.utils.createIdentity
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

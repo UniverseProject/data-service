@@ -1,6 +1,13 @@
 package io.github.universeproject.dataservice.supplier.http
 
 import io.github.universeproject.MojangAPI
+import io.github.universeproject.dataservice.cache.CacheClient
+import io.github.universeproject.dataservice.container.createRedisContainer
+import io.github.universeproject.dataservice.data.ProfileIdCacheServiceImpl
+import io.github.universeproject.dataservice.data.ProfileSkinCacheServiceImpl
+import io.github.universeproject.dataservice.supplier.SupplierConfiguration
+import io.github.universeproject.dataservice.utils.createProfileId
+import io.github.universeproject.dataservice.utils.getRandomString
 import io.lettuce.core.RedisURI
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -10,13 +17,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import io.github.universeproject.dataservice.cache.CacheClient
-import org.universe.dataservice.container.createRedisContainer
-import org.universe.dataservice.data.ProfileIdCacheServiceImpl
-import org.universe.dataservice.data.ProfileSkinCacheServiceImpl
-import org.universe.dataservice.supplier.SupplierConfiguration
-import org.universe.dataservice.utils.createProfileId
-import org.universe.dataservice.utils.getRandomString
 import kotlin.test.*
 
 @Testcontainers
@@ -28,7 +28,7 @@ class EntitySupplierStrategyTest {
         private val redisContainer = createRedisContainer()
     }
 
-    private lateinit var cacheClient: io.github.universeproject.dataservice.cache.CacheClient
+    private lateinit var cacheClient: CacheClient
 
     private lateinit var configuration: SupplierConfiguration
 
@@ -37,7 +37,7 @@ class EntitySupplierStrategyTest {
 
     @BeforeTest
     fun onBefore() = runBlocking {
-        cacheClient = io.github.universeproject.dataservice.cache.CacheClient {
+        cacheClient = CacheClient {
             uri = RedisURI.create(redisContainer.url)
         }
 
