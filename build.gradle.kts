@@ -2,14 +2,17 @@ plugins {
     kotlin("jvm") version "1.7.10"
     kotlin("plugin.serialization") version "1.7.10"
     id("org.jetbrains.dokka") version "1.7.10"
-    id("maven-publish")
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("net.researchgate.release") version "3.0.0"
+    `maven-publish`
     signing
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
+subprojects {
+    apply(plugin = "signing")
+    apply(plugin = "maven-publish")
+    apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "plugin.serialization")
 }
 
 repositories {
@@ -111,59 +114,92 @@ tasks {
     }
 }
 
-val sourcesJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(System.getenv("REPOSITORY_USERNAME"))
+            password.set(System.getenv("REPOSITORY_PASSWORD"))
+        }
+    }
 }
 
-val javadocJar by tasks.registering(Jar::class) {
-    group = JavaBasePlugin.DOCUMENTATION_GROUP
-    archiveClassifier.set("javadoc")
-}
+configure(allprojects) {
+    val signingKey: String? = System.getenv("SIGNING_KEY")
+    val signingPassword: String? = System.getenv("SIGNING_PASSWORD")
+    if(signingKey != null && signingPassword != null) {
+        signing {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign(publishing.publications)
+        }
+    }
 
-publishing {
-    publications {
-        create<MavenPublication>(project.name) {
-            from(components["kotlin"])
-            groupId = project.properties["group"] as? String? ?: "org.universe"
-            artifactId = project.name
-            version = project.properties["version"] as? String? ?: "1.0"
+    publishing {
+        val dokkaOutputDir = "$buildDir/dokka/${this@configure.name}"
 
-            artifact(sourcesJar.get())
+        tasks.dokkaHtml {
+            outputDirectory.set(file(dokkaOutputDir))
+        }
 
-            pom {
-                name.set(project.name)
-                description.set(Library.description)
-                url.set(Library.url)
+        val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+            delete(dokkaOutputDir)
+        }
 
-                organization {
-                    name.set(Organization.name)
-                    url.set(Organization.url)
-                }
+        val javadocJar = tasks.register<Jar>("javadocJar") {
+            dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+            archiveClassifier.set("javadoc")
+            from(dokkaOutputDir)
+        }
 
-                developers {
-                    developer {
-                        name.set(Developer.name)
+        publications {
+            val projectGitUrl = "https://github.com/UniverseProject/data-service"
+            withType<MavenPublication> {
+                artifact(javadocJar)
+                pom {
+                    name.set(this@configure.name)
+                    description.set(project.description)
+                    url.set(projectGitUrl)
+
+                    issueManagement {
+                        system.set("GitHub")
+                        url.set("$projectGitUrl/issues")
                     }
-                }
 
-                issueManagement {
-                    system.set(Issue.system)
-                    url.set(Issue.url)
-                }
-
-                licenses {
-                    license {
-                        name.set(License.name)
-                        url.set(License.url)
+                    ciManagement {
+                        system.set("GitHub Actions")
                     }
-                }
-                scm {
-                    connection.set(SCM.connection)
-                    developerConnection.set(SCM.developerConnection)
-                    url.set(Library.url)
+
+                    licenses {
+                        license {
+                            name.set("MIT")
+                            url.set("https://mit-license.org/")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            name.set("Distractic")
+                            email.set("Distractic@outlook.fr")
+                            url.set("https://github.com/Distractic")
+                        }
+                    }
+
+                    scm {
+                        connection.set("scm:git:$projectGitUrl.git")
+                        developerConnection.set("scm:git:git@github.com:UniverseProject/data-service.git")
+                        url.set(projectGitUrl)
+                    }
+
+                    distributionManagement {
+                        downloadUrl.set("$projectGitUrl/releases")
+                    }
                 }
             }
         }
     }
+}
+
+release {
+    tagTemplate.set("v${version}")
 }
