@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.7.21"
     kotlin("plugin.serialization") version "1.7.10"
     id("org.jetbrains.dokka") version "1.7.10"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
