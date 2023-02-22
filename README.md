@@ -1,5 +1,7 @@
 # data-service
 
+⚠️ **DEPRECATED Another project has been created to continue the system. [New project](https://github.com/Rushyverse/core)** ⚠️
+
 [![Discord](https://img.shields.io/discord/977166213467734056.svg?color=&label=Discord&logo=discord&style=for-the-badge)](https://discord.gg/EQyycAUZtt)
 
 This project allows managing data with the database, cache or other through several services. The goal is that a
